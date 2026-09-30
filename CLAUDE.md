@@ -6,7 +6,7 @@
      derive from the code (layout, dependency lists) does not. -->
 
 ## Project
-<One or two sentences: what this is, what it produces, what it deliberately is not.>
+Maps the structure of Edmonton's open data catalogue (data.edmonton.ca, Socrata) as a whole — dataset similarity, clusters, joinable fields, catalogue metrics and change over time — from catalogue metadata. It is **not** a per-dataset explorer; the City's own tools (311 Explorer, portal previews) cover that. Spec: `docs/SPEC_landscape.md`.
 
 ## Key Files
 - `TODO.md` — living backlog and **the source of truth for progress**. Read it first to know what to work on; update it in place as items open/close. Session summaries narrate *what happened*; TODO.md owns *what's left*. Never redo a closed item without asking — its `## Done` section lists every closed item in one line each. Conversely, an *open* item can be stale — reproduce the symptom and re-measure the stated cause before acting on it. **When an item closes, move its body to `docs/TODO_archive.md` and leave a `## Done` line** (`python tools/todo_archive.py` does it in bulk) — this file is read every session, so it must hold live work, not history.
@@ -20,7 +20,8 @@
 - `docs/CLAUDE_WEB.md` — **read before a Claude web research chat**: the generated brief (`scripts/make_brief.py`), claude.ai Project sync, the reply format. `docs/SCOPE.md` is its one hand-kept input. **A PR that changes a synced file (`docs/BRIEF.md`, `docs/SPEC_*.md`, `docs/ARCHITECTURE.md`, `data/DATA.md`) opens its description with "After merge: press Sync in the claude.ai Project."** — the web side cannot notice it is stale.
 - `docs/COPIER.md` — **read before pulling template changes** (`copier update`) or starting a project from the template.
 - `session-summary/` — session handoff notes. Read the latest before starting work; older ones live in `session-summary/archive/` (don't bulk-read them).
-- <`docs/SPEC_*.md`, `docs/ARCHITECTURE.md`, `docs/RUNBOOK.md` … add as they are written, one line each, with WHEN to read it>
+- `docs/SPEC_landscape.md` — purpose, core questions, harvest pitfalls, milestones, open questions. **Read before starting any milestone or scoping new analysis.**
+- <`docs/ARCHITECTURE.md`, `docs/RUNBOOK.md` … add as they are written, one line each, with WHEN to read it>
 
 ## Token Efficiency
 - **Never `Read` raw data files** (`.geojson`/`.csv`/large `.json`) — inspect via a small python summary instead. See `docs/TOKEN_EFFICIENCY.md`.

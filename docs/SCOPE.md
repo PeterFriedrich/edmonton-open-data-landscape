@@ -12,4 +12,4 @@ no bullet here — the brief already carries `docs/DECISIONS.md`.
 
 ## Out of scope
 
-- <**Thing not to recommend** — one line on why not; pointer if any.>
+- **Per-dataset exploration tools** (row browsers, dashboards for a single dataset, a 311 Explorer clone) — the City already provides these; this project's unit of analysis is the catalogue. `docs/SPEC_landscape.md`.
