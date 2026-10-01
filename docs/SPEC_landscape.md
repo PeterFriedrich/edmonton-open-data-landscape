@@ -39,12 +39,25 @@ data.edmonton.ca (Socrata): SODA API plus catalogue metadata.
   count + column summary), so a real change can be told from an automated
   refresh that only bumps the timestamp. After the first pull, estimate
   snapshot size and set a retention rule.
+- **Snapshot storage (owner, 2026-10-01):** full raw snapshots go to a
+  **private** GitHub repo. This repo is public, so it gets only *reduced*
+  snapshots (ids, titles, categories, tags, column names/types, counts, dates,
+  licence class; no `cachedContents.top`/`smallest`/`largest`) and derived
+  outputs. Reason: column summaries can hold personal names and addresses
+  (e.g. Business Licences), which the licence does not cover.
+- **Privacy:** never publish per-column top values or min/max unless the column
+  is on an allow-list of clearly non-personal columns (ward, category codes).
 - **Backfill:** check whether the Wayback Machine holds old copies of
   `data.edmonton.ca/data.json`; if so, they partly recover pre-project history.
-- **Attribution:** the 2026-10-01 probe found most assets say "See Terms of
-  Use" (88 of 100), a few "Canada Open Government Licence" and some none. The
-  assumed "Open Government Licence – City of Edmonton" didn't appear. Read the
-  portal's Terms of Use and settle the wording before publishing (`data/DATA.md`).
+- **Attribution:** the licence field says "See Terms of Use" on most assets
+  (88 of 100 in the probe). That page is the Open Government Licence – City of
+  Edmonton (an Alberta OGL variant, July 2022 per OSM sources, not yet read
+  live). Working string, still to confirm: "Contains information licensed under
+  the Open Government Licence – City of Edmonton." Third-party assets (e.g.
+  OGL–Alberta, OGL–Canada, Environment Canada) carry their own terms, often
+  only in the description, so classify each asset's licence before publishing.
+  Whether catalogue metadata itself is licensed "Information" is unconfirmed;
+  the City has been asked (`TODO.md`).
 - **Status:** unofficial; built on City of Edmonton open data, not affiliated
   with the City.
 
@@ -59,6 +72,9 @@ the 2026-10-01 probe (`data/DATA.md` has the field table); the rest are unchecke
    results. Filter by asset type and link each view to its parent before any
    similarity work. *Probe:* the Discovery API's `parent_fxf` gives the parent
    (37 of the first 100 assets have one). Maps carry no columns of their own.
+   **Community views** (user-created, `provenance` ≠ `official`) carry
+   user-edited titles and descriptions that the City hasn't reviewed. Keep
+   them apart from official assets.
 2. **Yearly series** ("Property Assessment 2019 / 2020 / …") form trivial tight
    clusters. Collapse to one entry per series, or flag them.
 3. **Field locations.** *Probe confirmed:* the Discovery API
@@ -104,8 +120,8 @@ Metadata first; row-level access only where a question can't be answered
 without it (join-key overlap, pitfall 4). Build several similarity signals,
 then combine and compare them.
 
-**"Real dataset"** = a top-level tabular or geospatial asset that is not a
-derived view of another asset; series members are grouped under one series id.
+**"Real dataset"** = an official (`provenance`), top-level tabular or
+geospatial asset that is not a derived view of another asset; series members are grouped under one series id.
 M1c makes the exact rule concrete and flags everything it excludes.
 
 1. Text similarity: embed titles, descriptions and tags.
@@ -163,10 +179,10 @@ Front end undecided; notebooks first.
 |---|---|
 | Metadata only, or sample rows? | Metadata + column summaries for coverage; targeted `distinct` queries on candidate key columns for joinability (pitfall 4). No general row sampling. |
 | Text vs. schema similarity, or weighted? | Keep separate first; report where they disagree (same topic/different schema and vice versa) — that is a finding. Weight later. |
-| Snapshot cadence? | Weekly from M1b; gzipped, committed to the repo. Weekly suffices because publisher timestamps are recorded (pitfall 3). Revisit size/retention after the first pull. |
+| Snapshot cadence? | Weekly from M1b. Full raw snapshots go to a private repo; this public repo gets reduced snapshots (see Data sources). Weekly is enough because publisher timestamps are recorded (pitfall 3). Revisit size/retention after the first pull. |
 | Notebooks or static site? | Notebooks through milestone 4; outputs as data files. |
 | Where does city comparison live, when does it split? | Minimal reference catalogue here for core question 3; split if it grows past that. |
-| Licence wording? | Confirm on the portal before publishing. |
+| Licence wording? | Working string in Data sources. Confirm on the live licence page and with the City (email drafted 2026-10-01) before publishing. |
 | GitHub name conflicts? | To check. |
 
 ## Review log
@@ -194,3 +210,19 @@ User-Agent, use an app token if rate-limited; read the portal's Terms of Use
 before publishing. Adjusted: the reply assumed the City licence, but the probe
 found "See Terms of Use" on most assets, so the Terms of Use is the main
 document to read. The reply also called publishing M6; it is M5.
+
+**2026-10-01, Claude web research report on licence, harvest and publishing**
+(`research/edmonton-open-data-landscape/licence_harvest_publish_reply_2026-10-01.md`). Accepted: the licence is the Alberta-template OGL – City of Edmonton
+behind "See Terms of Use"; working attribution string; non-endorsement
+disclaimer, no City branding; per-asset licence classes (City / third-party /
+community view); provenance filter; suppress top/min/max in anything
+published; full raw snapshots in a private repo with reduced public ones
+(owner decision); `X-App-Token`, about 1 request/s, back off on 429; email the
+City with the report's 5 questions (drafted, owner sends); show short titles
+plus links rather than full descriptions; record the licence version in force
+per snapshot. Adjusted:
+- The User-Agent names the repo URL, not an email address (owner).
+- "Fetch views only for changed assets" applies to weekly runs; the first
+  harvest fetches all assets that have columns.
+- Neither the licence text nor the attribution string has been checked
+  against the live page. Both stay "to confirm".

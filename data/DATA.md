@@ -73,5 +73,19 @@ unless noted:
 **"See Terms of Use"** for 88 assets, **"Canada Open Government Licence"** for 5,
 and missing for 7. The views API gives `licenseId` `SEE_TERMS_OF_USE` or null.
 No asset on page 0 named the "Open Government Licence – City of Edmonton" that
-the spec assumes. So the portal's **Terms of Use** document is the actual
-licence text for most assets, and it is still unread (TODO: licence item).
+the spec assumes. "See Terms of Use" points to the portal story
+`data.edmonton.ca/stories/s/City-of-Edmonton-Open-Data-Terms-of-Use/msh8-if28/`.
+Per the 2026-10-01 research report (`docs/SPEC_landscape.md` Review log), that
+page holds the Open Government Licence – City of Edmonton. Neither has been
+read live yet.
+- **Third-party licences show up only in descriptions** (e.g. "licensed under
+  the Open Government Licence – Alberta"). The licence field can't tell City
+  assets from third-party ones. Other signals: category "Externally Sourced
+  Datasets", custom field `Internal or External`, `attribution`.
+- **`provenance`** (Discovery `resource.provenance`, views `provenance`):
+  `official` vs community (user-created) views. The probe's 3 assets were all
+  `official`; the full-catalogue split is unknown.
+- **Personal information in column summaries:** `cachedContents.top` and
+  `smallest`/`largest` can hold individuals' names and addresses (e.g. Business
+  Licences rental-licence holders). Never publish them unfiltered (spec, Data
+  sources).
