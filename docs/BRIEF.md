@@ -34,7 +34,7 @@ Maps the structure of Edmonton's open data catalogue (data.edmonton.ca, Socrata)
 - **Hand-label a ~20-dataset neighbour spot-check** before showing any neighbour output (spec, Outputs).
 - **M4 — Graph and landscape visualisation.**
 - **M5 — Publish** with attribution and unofficial-status note. Blocked on licence wording.
-- **Confirm Open Government Licence – City of Edmonton attribution wording.**
+- **Confirm licence and attribution wording.** The probe found most assets say "See Terms of Use" (a few "Canada Open Government Licence", some none), so read the portal's Terms of Use. Also check whether the catalogue metadata itself (titles, descriptions) carries its own …
 - **GitHub name-conflict search** for `edmonton-open-data-landscape`.
 - **Pick the reference for "what's missing"** (core question 3): another Socrata city (e.g. Calgary) or a standard expected-datasets list. Cross-city needs a category mapping.
 - **Fill the rest of the CLAUDE.md template placeholders** (domain invariants) once the harvest shows what they are.

@@ -41,33 +41,41 @@ data.edmonton.ca (Socrata): SODA API plus catalogue metadata.
   snapshot size and set a retention rule.
 - **Backfill:** check whether the Wayback Machine holds old copies of
   `data.edmonton.ca/data.json`; if so, they partly recover pre-project history.
-- **Attribution:** Open Government Licence – City of Edmonton; confirm exact
-  terms and wording before publishing.
+- **Attribution:** the 2026-10-01 probe found most assets say "See Terms of
+  Use" (88 of 100), a few "Canada Open Government Licence" and some none. The
+  assumed "Open Government Licence – City of Edmonton" didn't appear. Read the
+  portal's Terms of Use and settle the wording before publishing (`data/DATA.md`).
 - **Status:** unofficial; built on City of Edmonton open data, not affiliated
   with the City.
 
 ## Harvest pitfalls (from spec review — confirm in milestone 1)
 
-Based on general Socrata knowledge, not yet checked against this portal.
+Based on general Socrata knowledge. Pitfalls 1, 3 and 4 were partly checked by
+the 2026-10-01 probe (`data/DATA.md` has the field table); the rest are unchecked.
 
 1. **Catalogue ≠ datasets.** Filtered views, maps, charts, stories and external
    links sit alongside the datasets they come from. Derived views share their
    parent's columns and description, so they would dominate nearest-neighbour
    results. Filter by asset type and link each view to its parent before any
-   similarity work.
+   similarity work. *Probe:* the Discovery API's `parent_fxf` gives the parent
+   (37 of the first 100 assets have one). Maps carry no columns of their own.
 2. **Yearly series** ("Property Assessment 2019 / 2020 / …") form trivial tight
    clusters. Collapse to one entry per series, or flag them.
-3. **Field locations.** The Discovery API (`api.us.socrata.com/api/catalog/v1`)
-   likely carries name, description, category, tags, columns and dates, but not
-   row counts — those need `/api/views/{id}.json` or a SODA `count(*)` per
-   dataset. "Update frequency" is a publisher-entered custom field: treat it as
-   *claimed*. Measure *actual* frequency from the publisher timestamps recorded
+3. **Field locations.** *Probe confirmed:* the Discovery API
+   (`api.us.socrata.com/api/catalog/v1`) carries name, description, category,
+   tags, columns, data/metadata-updated dates, licence, parent link and custom
+   fields, but not row counts. `/api/views/{id}.json` has no row-count field
+   either; a column summary's `count` stands in for one (SODA `count(*)` to
+   check). "Update frequency" is a publisher-entered custom field: treat it as
+   *claimed*. The same custom fields also give `Period of Coverage` (free text)
+   and `Automated or Manual`. Measure *actual* frequency from the publisher timestamps recorded
    in each snapshot (weekly diffs alone can't resolve sub-weekly updates),
    checked against the fingerprint.
 4. **Column summaries as a middle ground — for coverage, not keys.** The views
    API often exposes per-column summaries (null counts, min/max, top values).
    Min/max gives time coverage without rows. Top values are capped to a short
-   list, so they can't show overlap on high-cardinality keys (IDs, addresses,
+   list (*probe: capped at 20*, and not every column has a summary), so they
+   can't show overlap on high-cardinality keys (IDs, addresses,
    permit numbers). Join-key overlap needs **targeted row access on candidate
    key columns only**: SODA `select distinct` / `count(distinct)` — cheap for
    low-cardinality keys like neighbourhood (~400) or ward (12).
@@ -177,3 +185,12 @@ size/retention; cross-city category mapping. Adjusted:
 - Proposed DECISIONS rows not added: neither is locked yet, and one lacked a
   test or `[unverifiable]` tag. Both live here as spec revisions.
 Added: Wayback Machine backfill check for `data.json`.
+
+**2026-10-01, Claude web reply on probe licensing**
+(`research/edmonton-open-data-landscape/harvest_licence_reply_2026-10-01.md`).
+Accepted: a 4-request probe is fine; the licence binds at publishing, not
+harvesting; record the licence text from the probe; pace requests, send a
+User-Agent, use an app token if rate-limited; read the portal's Terms of Use
+before publishing. Adjusted: the reply assumed the City licence, but the probe
+found "See Terms of Use" on most assets, so the Terms of Use is the main
+document to read. The reply also called publishing M6; it is M5.
