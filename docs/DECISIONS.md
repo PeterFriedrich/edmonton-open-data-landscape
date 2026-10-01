@@ -19,3 +19,4 @@ locks, add a row; when one is superseded, strike it (`~~...~~`) or mark it
 
 | When | Decision | Full reasoning |
 |------|----------|----------------|
+| 2026-10-01 | **Full raw snapshots go in a private repo; this public repo holds only reduced snapshots** (no `cachedContents.top`/`smallest`/`largest`) and derived outputs. Rejected: committing full raw snapshots here (column summaries can carry personal information, which the licence excludes), and keeping them only on the server (no off-server copy). Owner decision. [unverifiable] until the harvest PR adds its reduced-snapshot guard test. | `docs/SPEC_landscape.md` §Data sources, Review log 2026-10-01 |
