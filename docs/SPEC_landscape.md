@@ -53,8 +53,9 @@ data.edmonton.ca (Socrata): SODA API plus catalogue metadata.
   prose is unclear (owner, 2026-10-02: keep anything uncertain private).
 - **Privacy:** never publish per-column top values or min/max unless the column
   is on an allow-list of clearly non-personal columns (ward, category codes).
-- **Backfill:** check whether the Wayback Machine holds old copies of
-  `data.edmonton.ca/data.json`; if so, they partly recover pre-project history.
+- **Backfill:** checked 2026-10-02: the Wayback Machine has no captures of
+  `data.edmonton.ca/data.json`, so change history starts with the first
+  snapshot (2026-10-02).
 - **Attribution:** the licence field says "See Terms of Use" on most assets
   (88 of 100 in the probe). That page is the Open Government Licence – City of
   Edmonton (an Alberta OGL variant, July 2022 per OSM sources, not yet read
