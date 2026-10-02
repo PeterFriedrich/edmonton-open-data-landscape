@@ -22,6 +22,7 @@ Maps the structure of Edmonton's open data catalogue (data.edmonton.ca, Socrata)
 - numpy==2.5.3
 - scipy==1.18.1
 - scikit-learn==1.9.1
+- fastembed==0.8.1
 - pandas==3.0.6
 - matplotlib==3.11.2
 - jupyter==1.1.1
