@@ -141,6 +141,10 @@ the 119 series counted once.
 2. Schema similarity: IDF-weighted overlap in column names and types. Location-only
    columns (geometry types, bare coordinates, `:@computed_region_*`) are left out: with
    them in, every mapped dataset looked alike (M3a, 2026-10-02).
+   Clusters (M3b) are compared with portal categories twice: all categorised units, and
+   without categories holding more than 10% of units (Surveys, Census), which form
+   clusters of their own and inflate ARI from ~0.25 to ~0.88. ARI carries a 95%
+   interval from 80% subsets without replacement; AMI and NMI are point values only.
 3. Operational metrics: size, claimed vs. measured update frequency, age,
    column counts.
 4. Coverage: time extent from date-column min/max; spatial unit from columns.
