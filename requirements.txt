@@ -2,3 +2,8 @@
 # installs; keep the two in lockstep.
 pytest==9.0.3
 copier==9.18.2
+# Notebooks (notebooks/); not needed by CI.
+pandas==3.0.6
+matplotlib==3.11.2
+jupyter==1.1.1
+nbconvert==7.17.1
