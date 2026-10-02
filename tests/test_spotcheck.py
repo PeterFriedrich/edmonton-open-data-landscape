@@ -2,7 +2,8 @@
 
 A neighbour found by both signals is ONE pair carrying both ranks, so a label
 counts toward both signals' precision. `unsure` and unlabelled pairs are counted,
-never scored, and a label for a pair outside the sample is an error.
+never scored, and a label for a pair outside the sample is an error. Extending
+with a later signal must keep every existing pair id, so labels stay attached.
 """
 import pytest
 
@@ -54,3 +55,19 @@ def test_label_outside_sample_is_an_error():
     with pytest.raises(ValueError):
         sc.score([{"pair_id": "p001", "unit": "a", "text_rank": 1, "schema_rank": ""}],
                  [{"pair_id": "p999", "verdict": "yes"}])
+
+
+def test_extend_keeps_pair_ids_and_appends_new_neighbours():
+    units = [unit("a", "A"), unit("b", "B"), unit("c", "C"), unit("d", "D")]
+    pairs = [p for p in sc.build_pairs(units, [nb("a", "text", 1, "b")], k=5) if p["unit"] == "a"]
+    before = [(p["pair_id"], p["neighbour"]) for p in pairs]
+    out = sc.extend([dict(p) for p in pairs], units,
+                    [nb("a", "embed", 1, "c"), nb("a", "embed", 2, "b"), nb("a", "embed", 6, "d"),
+                     nb("z", "embed", 1, "b")], "embed", k=5)
+    assert [(p["pair_id"], p["neighbour"]) for p in out[:len(pairs)]] == before
+    assert out[0]["embed_rank"] == 2
+    new = out[len(pairs):]
+    assert [(p["neighbour"], p["embed_rank"], p["text_rank"]) for p in new] == [("c", 1, "")]
+    assert new[0]["pair_id"] == f"p{len(pairs) + 1:03d}"
+    with pytest.raises(ValueError):
+        sc.extend(out, units, [nb("a", "embed", 1, "c")], "embed")
