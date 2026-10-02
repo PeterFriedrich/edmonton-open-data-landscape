@@ -138,7 +138,9 @@ are reported both ways. 2026-10-02: 1421 real datasets, **920** with each of
 the 119 series counted once.
 
 1. Text similarity: embed titles, descriptions and tags.
-2. Schema similarity: IDF-weighted overlap in column names and types.
+2. Schema similarity: IDF-weighted overlap in column names and types. Location-only
+   columns (geometry types, bare coordinates, `:@computed_region_*`) are left out: with
+   them in, every mapped dataset looked alike (M3a, 2026-10-02).
 3. Operational metrics: size, claimed vs. measured update frequency, age,
    column counts.
 4. Coverage: time extent from date-column min/max; spatial unit from columns.

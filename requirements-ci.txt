@@ -2,3 +2,7 @@
 # need; pin exact versions and bump in lockstep with requirements.txt.
 pytest==9.0.3
 copier==9.18.2
+# Similarity (src/similarity.py, tests/test_similarity.py).
+numpy==2.5.3
+scipy==1.18.1
+scikit-learn==1.9.1

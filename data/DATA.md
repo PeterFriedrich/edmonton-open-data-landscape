@@ -84,6 +84,15 @@ written to gitignored `data/processed/inventory/<date>.csv` + `_summary.json`.
 - 7 datasets with no parent are marked "View" by the publisher.
 
 **Quirks (full listing):**
+- **Column field names are mostly unique:** 8715 of 10576 distinct field names on
+  real datasets occur once. The shared ones are location columns (`geometry_point`,
+  `location`, `the_geom`, `latitude`/`longitude`), the Speed Check Sign schema (~311
+  datasets) and the Insight Community profiling questions (`q*_study_profiling_
+  questionnaire_2014`, ~210 survey datasets).
+- **`:@computed_region_<xxxx>_<xxxx>` columns** (977 on 174 real datasets) are added
+  by Socrata to point datasets: the polygon of a boundary dataset (wards,
+  neighbourhoods, school wards) each point falls in. The suffix is the boundary
+  dataset's id. Not publisher content; `src/similarity.py` ignores them.
 - **Custom-field values are inconsistent:** trailing spaces ("Internal " 198 vs
   "Internal" 175), synonyms ("Internally Sourced Data " vs "Internal", "Annual" vs
   "Annually"), case ("When Necessary"/"When necessary"), and a stray key
