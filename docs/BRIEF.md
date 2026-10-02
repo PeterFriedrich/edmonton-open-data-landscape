@@ -19,6 +19,10 @@ Maps the structure of Edmonton's open data catalogue (data.edmonton.ca, Socrata)
 
 - pytest==9.0.3
 - copier==9.18.2
+- pandas==3.0.6
+- matplotlib==3.11.2
+- jupyter==1.1.1
+- nbconvert==7.17.1
 
 ## Locked decisions
 
@@ -31,7 +35,7 @@ Maps the structure of Edmonton's open data catalogue (data.edmonton.ca, Socrata)
 
 - **M1b — Start weekly snapshots right after M1a.** First snapshot 2026-10-02; next due ~2026-10-09. Each run: `python -m src.harvest`, then `python -m src.reduce_snapshot data/raw/private-snapshots/<date>`, commit + push in both repos. **Cron (owner-approved 2026-10-02):** …
 - **Decide on the per-asset column-statistics pull** (`/api/views/{id}.json`, one call per asset), before M2. It gets row counts (size, Q4), measured time coverage (min/max, Q1), join-key evidence (distinct counts/top values, Q5) and row-count fingerprints (real change vs refresh, …
-- **M2 — Descriptive metrics notebook.** Size, age, claimed update frequency, column counts; test whether per-column summaries (spec pitfall 4) are available.
+- **M2 — Descriptive metrics notebook.** Size, age, claimed update frequency, column counts; test whether per-column summaries (spec pitfall 4) are available. **2026-10-02:** `notebooks/m2_metrics.ipynb` covers composition, categories, age, claimed vs actual update frequency, …
 - **M3 — Similarity signals and clustering.** Text embeddings and IDF-weighted schema overlap kept separate first; compare with portal categories (ARI/NMI) with bootstrap intervals — categories are a reference, not ground truth. Joinability: normalised names + targeted `distinct` …
 - **Hand-label a ~20-dataset neighbour spot-check** before showing any neighbour output (spec, Outputs).
 - **M4 — Graph and landscape visualisation.**
