@@ -34,6 +34,7 @@ Maps the structure of Edmonton's open data catalogue (data.edmonton.ca, Socrata)
 - **2026-10-02** — **Weekly snapshots run from cron and the reduced public copy is pushed straight to master** (`scripts/weekly_snapshot.sh`, Fri 08:00 UTC, in its own worktree on origin/master).
 - **2026-10-02** — **"Real dataset" = Discovery type `dataset` with no parent; series = same category + same name once numbers are replaced; members kept, counts reported both ways** (1421 / 920 on 2026-10-02).
 - **2026-10-02** — **Schema similarity ignores location-only columns** (geometry datatypes, bare lat/long, `location_address/_city/_state/_zip`, Socrata's `:@computed_region_*`); address, ward and neighbourhood columns …
+- **2026-10-02** — **Cluster–category agreement is reported with and without dominant categories (>10% of units), and only ARI gets an interval, from 80% subsets without replacement.**
 
 ## Open work
 
