@@ -1,0 +1,55 @@
+{
+  "reduced_from": {
+    "retrieved_started_utc": "2026-10-02T04:31:05+00:00",
+    "retrieved_finished_utc": "2026-10-02T04:32:50+00:00",
+    "domain": "data.edmonton.ca",
+    "code_sha": "7aacaabb5fc39ec9e7db144aadd7cbefc3c57f72",
+    "n_unique_ids": 2088
+  },
+  "n_assets": 2088,
+  "kept_resource_keys": [
+    "id",
+    "name",
+    "type",
+    "provenance",
+    "attribution",
+    "createdAt",
+    "updatedAt",
+    "data_updated_at",
+    "metadata_updated_at",
+    "publication_date",
+    "parent_fxf",
+    "columns_name",
+    "columns_field_name",
+    "columns_datatype",
+    "download_count"
+  ],
+  "kept_custom_fields": [
+    "General-Information_Internal-or-External",
+    "General-Information_Primary-Dataset-or-View",
+    "Quality-Indicators_Duplicates-Removed",
+    "Quality-Indicators_Verified-for-Accuracy",
+    "Spatial_Coordinate-System",
+    "Spatial_Datum",
+    "Time-Frame_Automated-or-Manual",
+    "Time-Frame_Period-of-Coverage",
+    "Time-Frame_Update-Frequency"
+  ],
+  "dropped_custom_fields": {
+    "Administration_Job-Repository-(FME-Server": 1,
+    "Administration_Job-Scheduling": 138,
+    "Dataset-Dependencies_Dataset-Name-(If-any)": 199,
+    "General-Information_Gallery-Category-(Google)": 32,
+    "General-Information_Purpose": 1169,
+    "Key-Performance-Indicators_Field-1": 2,
+    "Key-Performance-Indicators_Field-2": 309,
+    "Quality-Indicators_Verified-for-Accuracy?": 1,
+    "Story-Attributes_External-embed-viz": 43,
+    "Story-Attributes_Internal-embed-viz": 64,
+    "Story-Attributes_Story-built-viz": 43,
+    "Time-Frame_Date-Created": 112,
+    "Time-Frame_Date-Made-Public": 853,
+    "Time-Frame_Date-Updated": 264,
+    "Transparency-App_Application": 3
+  }
+}

@@ -21,14 +21,62 @@ while the guard stays green.
 - **Publisher / URL:** City of Edmonton, https://data.edmonton.ca. Two endpoints:
   Discovery API `https://api.us.socrata.com/api/catalog/v1?domains=data.edmonton.ca`
   (paged with `limit`/`offset`), and per asset `https://data.edmonton.ca/api/views/{id}.json`.
-- **Retrieved:** 2026-10-01 **probe only**: one Discovery page (`limit=100`) plus
-  views for `24uj-dj8v` (dataset), `ex39-rsw7` (map), `8jwm-dd74` (filter).
-  Raw responses are kept locally in `data/raw/probe_2026-10-01/` (gitignored), along
-  with the probe script. The full harvest hasn't run yet (M1a).
-- **Size:** `resultSetSize` = **2088** assets, all types. The Discovery page was
-  677 KB per 100 assets (≈14 MB raw for the full catalogue, before gzip). Views
-  responses were 5–56 KB each.
-- **Asset types on page 0:** dataset 54, map 23, story 12, filter 6, chart 4, file 1.
+- **Retrieved:** first full listing **2026-10-02 04:31–04:32 UTC**, by
+  `python -m src.harvest`: 21 pages × 100, 2088 unique ids = `resultSetSize`, no
+  duplicates, no app token. Raw: private repo
+  `PeterFriedrich/edmonton-open-data-landscape-snapshots`, `2026-10-02/` (cloned at
+  `data/raw/private-snapshots/`). Public reduced copy: `data/snapshots/2026-10-02/`.
+  The manifest's `code_sha` is the master commit the harvester branch started from;
+  the harvester itself was not yet committed. Earlier probe (2026-10-01, 1 Discovery
+  page + 3 views calls) is kept locally in `data/raw/probe_2026-10-01/`.
+- **Size:** raw listing 1.72 MB gzipped (~14 MB raw); reduced public copy 0.67 MB
+  gzipped. Weekly that is ~90 MB/yr private and ~35 MB/yr public. Views responses
+  (not harvested) were 5–56 KB each in the probe.
+- **Retention (proposed):** keep every weekly snapshot in both repos; revisit if
+  the private repo passes 1 GB.
+- **Wayback Machine:** the CDX index has **no captures** of
+  `data.edmonton.ca/data.json` (checked 2026-10-02, any status). No pre-project
+  history to backfill from that source.
+
+**Whole-catalogue survey (2026-10-02 snapshot, 2088 assets):**
+- **Types:** dataset 1421, map 279, chart 179, filter 108, story 61, href 21,
+  file 18, calendar 1. Columns only on datasets (1421) and filters (108).
+- **Parents:** 606 assets have `parent_fxf` (19 have more than one); no dataset
+  has one. 31 parent ids are not in the listing (private or deleted parents).
+- **`provenance`:** all 2088 are `official`. The Discovery API may leave out
+  community assets by default; unchecked (M1c).
+- **Licence (`metadata.license`):** "See Terms of Use" 1873, none 203, "Canada
+  Open Government Licence" 12. 75 descriptions mention a licence.
+- **Attribution:** City of Edmonton 1389, none 469, EPCOR 72, Statistics Canada 31,
+  Alberta Health Services 24, Environment Canada 11, others.
+- **Categories:** Surveys 463, Vehicle Speed 341, Census 212, none 174, City
+  Administration 131, Externally Sourced Datasets 107, … The three biggest look
+  like yearly/per-site series (pitfall 2), so the "real dataset" count will be far
+  below 1421 once M1c collapses series.
+- **Custom-field fill (of 2088):** Update Frequency 2008, Automated or Manual
+  1829, Primary Dataset or View 1820, Duplicates Removed 1716, Verified for
+  Accuracy 1713, Internal or External 1440, Purpose 1169, Period of Coverage
+  1105, Coordinate System 953, Date Made Public 853, KPI Field 2 309, Date
+  Updated 264, Dataset Dependencies 199, Datum 196, Job Scheduling 138, Date
+  Created 112, plus rare story/admin keys.
+- **Claimed update frequency:** Not Updated (Historical Only) 1025, Weekly 373,
+  When Necessary 210 (+14 "When necessary"), Daily 155, Monthly 74, Annually 73
+  (+19 "Annual"), X times per day 24, Hourly 22, Quarterly 9, Near Real-Time 7,
+  Bi-Weekly 2.
+- **Actual data updates (datasets, `data_updated_at`):** 438 within 7 days, 439
+  within 14, 450 within 30, 552 within 365. The frequent updaters are a stable
+  set of ~440.
+- **Columns per dataset:** median 17, mean 20.8, none empty.
+
+**Quirks (full listing):**
+- **Custom-field values are inconsistent:** trailing spaces ("Internal " 198 vs
+  "Internal" 175), synonyms ("Internally Sourced Data " vs "Internal", "Annual" vs
+  "Annually"), case ("When Necessary"/"When necessary"), and a stray key
+  `Quality-Indicators_Verified-for-Accuracy?`. Normalise in M1c; never compare
+  raw strings.
+- **The reduced public copy drops** custom keys outside its allow-list
+  (`src/reduce_snapshot.py`); its manifest counts each one. Date Made Public /
+  Date Updated / Date Created are factual and could be added to the allow-list.
 
 **Where each field lives** (corrects spec pitfall 3). Discovery, `resource.*`
 unless noted:
