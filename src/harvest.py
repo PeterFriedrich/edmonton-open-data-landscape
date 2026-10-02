@@ -145,6 +145,9 @@ def main(argv=None):
 
     token = os.environ.get("SOCRATA_APP_TOKEN") or None
     started = datetime.now(timezone.utc)
+    date = args.date or started.date().isoformat()
+    if (Path(args.out) / date).exists():  # fail before spending any requests
+        raise HarvestError(f"{Path(args.out) / date} already exists; refusing to overwrite a snapshot")
     results, stats = harvest(lambda url: http_get_json(url, token))
     manifest = {
         "source": DISCOVERY_URL, "domain": DOMAIN, "page_size": PAGE_SIZE, "pace_s": PACE_S,
@@ -152,7 +155,7 @@ def main(argv=None):
         "retrieved_finished_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "app_token_used": bool(token), "user_agent": USER_AGENT, "code_sha": code_sha(), **stats,
     }
-    snap = write_snapshot(args.out, args.date or started.date().isoformat(), results, manifest)
+    snap = write_snapshot(args.out, date, results, manifest)
     log.info("snapshot_written path=%s assets=%d", snap, stats["n_unique_ids"])
     return 0
 
