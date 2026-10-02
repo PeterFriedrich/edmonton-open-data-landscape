@@ -39,6 +39,10 @@ data.edmonton.ca (Socrata): SODA API plus catalogue metadata.
   count + column summary), so a real change can be told from an automated
   refresh that only bumps the timestamp. After the first pull, estimate
   snapshot size and set a retention rule.
+  *Owner, 2026-10-02:* snapshots start **metadata only** (Discovery listing,
+  ~21 requests). Until the per-asset statistics pull is decided (`TODO.md`),
+  the fingerprint is timestamps + a hash of the column list + the
+  `Automated or Manual` field, with no row count.
 - **Snapshot storage (owner, 2026-10-01):** full raw snapshots go to a
   **private** GitHub repo. This repo is public, so it gets only *reduced*
   snapshots (ids, titles, categories, tags, column names/types, counts, dates,
