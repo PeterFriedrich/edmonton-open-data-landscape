@@ -68,6 +68,21 @@ while the guard stays green.
   set of ~440.
 - **Columns per dataset:** median 17, mean 20.8, none empty.
 
+**Inventory (M1c, `python -m src.inventory <raw snapshot>`, 2026-10-02):**
+written to gitignored `data/processed/inventory/<date>.csv` + `_summary.json`.
+- **Roles:** 1421 candidate (real) datasets; 606 derived (map 279, chart 179,
+  filter 108 incl. 7 with a missing parent, story 39 incl. 22 missing, calendar 1);
+  61 non-tabular (standalone story 22, href 21, file 18).
+- **Series:** 119 series cover 620 datasets (Speed Check Sign, one dataset per
+  sign: 309). Real datasets with each series counted once: **920**.
+- **Licence class** (candidates): city 1235, third-party 132, unknown 54 (no
+  attribution and no Internal/External field). Signals on third-party ones:
+  non-City attribution 116, External/Combined/Crowdsourced 115, category
+  "Externally Sourced Datasets" 50, description phrase 37, licence field 3.
+  A bare "licence" or "Terms of Use" in a description is not a signal; both
+  usually mean business licences or the City's own terms.
+- 7 datasets with no parent are marked "View" by the publisher.
+
 **Quirks (full listing):**
 - **Custom-field values are inconsistent:** trailing spaces ("Internal " 198 vs
   "Internal" 175), synonyms ("Internally Sourced Data " vs "Internal", "Annual" vs
@@ -131,8 +146,9 @@ read live yet.
   assets from third-party ones. Other signals: category "Externally Sourced
   Datasets", custom field `Internal or External`, `attribution`.
 - **`provenance`** (Discovery `resource.provenance`, views `provenance`):
-  `official` vs community (user-created) views. The probe's 3 assets were all
-  `official`; the full-catalogue split is unknown.
+  `official` vs community (user-created) views. All 2088 harvested assets are
+  `official`, and a `provenance=community` query returned **0** (2026-10-02).
+  Community views, if any exist, aren't listed by Discovery.
 - **Personal information in column summaries:** `cachedContents.top` and
   `smallest`/`largest` can hold individuals' names and addresses (e.g. Business
   Licences rental-licence holders). Never publish them unfiltered (spec, Data
