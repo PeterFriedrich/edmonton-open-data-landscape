@@ -19,6 +19,9 @@ Maps the structure of Edmonton's open data catalogue (data.edmonton.ca, Socrata)
 
 - pytest==9.0.3
 - copier==9.18.2
+- numpy==2.5.3
+- scipy==1.18.1
+- scikit-learn==1.9.1
 - pandas==3.0.6
 - matplotlib==3.11.2
 - jupyter==1.1.1
@@ -30,6 +33,7 @@ Maps the structure of Edmonton's open data catalogue (data.edmonton.ca, Socrata)
 - **2026-10-02** — **Public reduced snapshots are built from an allow-list** (`src/reduce_snapshot.py`), so a field Socrata adds later stays private until someone decides otherwise; dropped custom keys are counted in …
 - **2026-10-02** — **Weekly snapshots run from cron and the reduced public copy is pushed straight to master** (`scripts/weekly_snapshot.sh`, Fri 08:00 UTC, in its own worktree on origin/master).
 - **2026-10-02** — **"Real dataset" = Discovery type `dataset` with no parent; series = same category + same name once numbers are replaced; members kept, counts reported both ways** (1421 / 920 on 2026-10-02).
+- **2026-10-02** — **Schema similarity ignores location-only columns** (geometry datatypes, bare lat/long, `location_address/_city/_state/_zip`, Socrata's `:@computed_region_*`); address, ward and neighbourhood columns …
 
 ## Open work
 
