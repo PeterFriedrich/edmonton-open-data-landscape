@@ -42,9 +42,11 @@ data.edmonton.ca (Socrata): SODA API plus catalogue metadata.
 - **Snapshot storage (owner, 2026-10-01):** full raw snapshots go to a
   **private** GitHub repo. This repo is public, so it gets only *reduced*
   snapshots (ids, titles, categories, tags, column names/types, counts, dates,
-  licence class; no `cachedContents.top`/`smallest`/`largest`) and derived
-  outputs. Reason: column summaries can hold personal names and addresses
-  (e.g. Business Licences), which the licence does not cover.
+  licence class; no `cachedContents.top`/`smallest`/`largest`, and no dataset
+  or column descriptions) and derived outputs. Reasons: column summaries can
+  hold personal names and addresses (e.g. Business Licences), which the
+  licence does not cover; and whether the licence covers the catalogue's own
+  prose is unclear (owner, 2026-10-02: keep anything uncertain private).
 - **Privacy:** never publish per-column top values or min/max unless the column
   is on an allow-list of clearly non-personal columns (ward, category codes).
 - **Backfill:** check whether the Wayback Machine holds old copies of
@@ -57,7 +59,8 @@ data.edmonton.ca (Socrata): SODA API plus catalogue metadata.
   OGL–Alberta, OGL–Canada, Environment Canada) carry their own terms, often
   only in the description, so classify each asset's licence before publishing.
   Whether catalogue metadata itself is licensed "Information" is unconfirmed;
-  the City has been asked (`TODO.md`).
+  unconfirmed; reading the live licence page comes first, then optionally
+  asking the City (`TODO.md`).
 - **Status:** unofficial; built on City of Edmonton open data, not affiliated
   with the City.
 
@@ -182,7 +185,7 @@ Front end undecided; notebooks first.
 | Snapshot cadence? | Weekly from M1b. Full raw snapshots go to a private repo; this public repo gets reduced snapshots (see Data sources). Weekly is enough because publisher timestamps are recorded (pitfall 3). Revisit size/retention after the first pull. |
 | Notebooks or static site? | Notebooks through milestone 4; outputs as data files. |
 | Where does city comparison live, when does it split? | Minimal reference catalogue here for core question 3; split if it grows past that. |
-| Licence wording? | Working string in Data sources. Confirm on the live licence page and with the City (email drafted 2026-10-01) before publishing. |
+| Licence wording? | Working string in Data sources. Confirm on the live licence page before publishing; optionally ask the City (email drafted 2026-10-01). |
 | GitHub name conflicts? | To check. |
 
 ## Review log
