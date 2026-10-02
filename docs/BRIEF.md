@@ -22,7 +22,8 @@ Maps the structure of Edmonton's open data catalogue (data.edmonton.ca, Socrata)
 
 ## Locked decisions
 
-- **2026-10-02** — **Full raw snapshots go in a private repo; this public repo holds only reduced snapshots**: no `cachedContents.top`/`smallest`/`largest` **and no dataset or column descriptions**, plus derived …
+- **2026-10-02** — AMENDED 2026-10-02 by the next row (guard test now exists).
+- **2026-10-02** — **Public reduced snapshots are built from an allow-list** (`src/reduce_snapshot.py`), so a field Socrata adds later stays private until someone decides otherwise; dropped custom keys are counted in …
 
 ## Open work
 
