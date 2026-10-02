@@ -35,3 +35,7 @@ node_modules/
 
 # Claude Code personal settings (per-machine permission grants)
 .claude/settings.local.json
+
+# Weekly cron (scripts/weekly_snapshot.sh)
+.cron-worktree/
+logs/

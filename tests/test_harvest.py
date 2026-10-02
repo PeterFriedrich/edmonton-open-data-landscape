@@ -150,3 +150,13 @@ def test_reduced_snapshot_keeps_every_asset(tmp_path):
     (raw / "manifest.json").write_text(json.dumps(manifest))
     with pytest.raises(RuntimeError, match="5 reduced assets vs 6"):
         rs.reduce_snapshot(raw, tmp_path / "public")
+
+
+def test_main_refuses_existing_snapshot_before_any_request(tmp_path, monkeypatch):
+    (tmp_path / "2026-10-02").mkdir()
+
+    def no_network(*a, **k):
+        raise AssertionError("made a request despite an existing snapshot")
+    monkeypatch.setattr(hv, "http_get_json", no_network)
+    with pytest.raises(hv.HarvestError, match="refusing to overwrite"):
+        hv.main(["--out", str(tmp_path), "--date", "2026-10-02"])

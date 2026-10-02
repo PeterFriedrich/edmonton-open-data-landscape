@@ -128,9 +128,14 @@ Metadata first; row-level access only where a question can't be answered
 without it (join-key overlap, pitfall 4). Build several similarity signals,
 then combine and compare them.
 
-**"Real dataset"** = an official (`provenance`), top-level tabular or
-geospatial asset that is not a derived view of another asset; series members are grouped under one series id.
-M1c makes the exact rule concrete and flags everything it excludes.
+**"Real dataset"** (M1c, `src/inventory.py`) = Discovery type `dataset` with no
+`parent_fxf`. Everything else gets a role (`derived` with a link to its parent,
+or `non_tabular`) and an exclusion reason. All Discovery assets are `official`;
+community assets aren't listed at all. **Series:** datasets in the same
+category whose names match once every number is replaced ("Speed Check Sign -
+DFS041", "2016 Census - …") share a `series_key`. Members are kept, and counts
+are reported both ways. 2026-10-02: 1421 real datasets, **920** with each of
+the 119 series counted once.
 
 1. Text similarity: embed titles, descriptions and tags.
 2. Schema similarity: IDF-weighted overlap in column names and types.
