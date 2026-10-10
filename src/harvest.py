@@ -78,7 +78,9 @@ def fetch_with_retry(fetch, url, sleep):
 
 
 def page_url(offset):
-    q = {"domains": DOMAIN, "limit": PAGE_SIZE, "offset": offset}
+    # The default order is relevance, which is not stable across requests: on
+    # 2026-10-09 one id came back on two pages and another on none (issue #26).
+    q = {"domains": DOMAIN, "limit": PAGE_SIZE, "offset": offset, "order": "dataset_id"}
     return f"{DISCOVERY_URL}?{urllib.parse.urlencode(q)}"
 
 

@@ -20,7 +20,7 @@ while the guard stays green.
 ### data.edmonton.ca catalogue metadata (Socrata)
 - **Publisher / URL:** City of Edmonton, https://data.edmonton.ca. Two endpoints:
   Discovery API `https://api.us.socrata.com/api/catalog/v1?domains=data.edmonton.ca`
-  (paged with `limit`/`offset`), and per asset `https://data.edmonton.ca/api/views/{id}.json`.
+  (paged with `limit`/`offset` and `order=dataset_id`), and per asset `https://data.edmonton.ca/api/views/{id}.json`.
 - **Retrieved:** first full listing **2026-10-02 04:31–04:32 UTC**, by
   `python -m src.harvest`: 21 pages × 100, 2088 unique ids = `resultSetSize`, no
   duplicates, no app token. Raw: private repo
@@ -29,6 +29,11 @@ while the guard stays green.
   The manifest's `code_sha` is the master commit the harvester branch started from;
   the harvester itself was not yet committed. Earlier probe (2026-10-01, 1 Discovery
   page + 3 views calls) is kept locally in `data/raw/probe_2026-10-01/`.
+- **Paging needs an explicit order.** The default order is relevance, which shifts
+  between requests. The 2026-10-09 cron run got `9rqj-xqy4` on two pages and lost
+  one id (2087 unique of 2088), and the harvester's guard failed the run (issue #26).
+  `order=dataset_id` gives a sorted and complete listing (checked 2026-10-10:
+  2088 of 2088, ascending).
 - **Size:** raw listing 1.72 MB gzipped (~14 MB raw); reduced public copy 0.67 MB
   gzipped. Weekly that is ~90 MB/yr private and ~35 MB/yr public. Views responses
   (not harvested) were 5–56 KB each in the probe.

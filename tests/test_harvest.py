@@ -66,6 +66,11 @@ def test_harvest_fails_hard_on_duplicates_from_shifting_pages():
         hv.harvest(fetch, sleep=no_sleep)
 
 
+def test_pages_ask_for_a_stable_order():
+    # Without it Socrata orders by relevance and offset paging can skip an id (issue #26).
+    assert "order=dataset_id" in hv.page_url(0)
+
+
 def test_harvest_paces_between_requests():
     slept = []
     fetch, _ = fake_fetch([asset(i) for i in range(250)])
