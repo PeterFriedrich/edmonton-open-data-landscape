@@ -245,3 +245,28 @@ per snapshot. Adjusted:
   harvest fetches all assets that have columns.
 - Neither the licence text nor the attribution string has been checked
   against the live page. Both stay "to confirm".
+
+**2026-10-13, Claude web research on the front-end stack and similar projects**
+(`research/edmonton-open-data-landscape/stack_reply_2026-10-13.md`; checked the
+same day by the `edmonton-civic-map` session against the repo and live registries).
+Nothing locked yet; the owner picks the stack. Proposed: Python + Jinja2 static
+HTML with vendored deck.gl, sigma.js + graphology and Observable Plot, no npm,
+on GitHub Pages; Quarto + OJS as the fallback; layout computed in Python with
+t-SNE initialised from last week plus Procrustes; cluster labels from titles,
+tags and categories only; publish coordinates, cluster ids and top-k neighbours,
+never vectors, vocabulary or matrices. Adjusted:
+- The layout parameters as given don't stabilise the map: sklearn's default
+  early exaggeration undoes the initialisation. `early_exaggeration=1` and a
+  short run did (measurements in `TODO.md`, M4). `init="pca"` is rejected
+  with a precomputed metric.
+- The reply assumed this repo already vendors deck.gl and builds the way tax-viz
+  does. It vendors nothing, and tax-viz is one hand-edited HTML file, not
+  Jinja2 templates, so the build is new work.
+- Its repo name `edmonton-catalogue-map` and tree are illustrative. "Push with a
+  deploy key, not GITHUB_TOKEN" is already the case: the cron pushes from the
+  server.
+- Its page order (search first, map secondary) rests mainly on one 6-person
+  study (DataLens). It's a design proposal for the owner, not a finding.
+- Unchecked: the quoted studies, opendataedmonton.ca and the "no comparable
+  catalogue map exists" claim.
+
