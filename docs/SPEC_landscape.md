@@ -180,6 +180,14 @@ of scope). So each result opens what the portal doesn't have:
 For the technical audience, the payoff is "this dataset, plus the ones you can
 join it to". The theme overview and the map are the management audience's way in.
 
+- **Join partners are labelled "shares a column name"** until a targeted
+  `distinct` query confirms the values overlap (pitfalls 4–5; M3 joinability).
+  A shared name is not a shared key.
+- **Per-dataset data is built as one small JSON file per unit, loaded on demand**,
+  not as about 920 generated pages. This is proposed, not decided.
+- **A "For AI" export** (`catalog.json`: ids, titles, API URLs, relationships)
+  serves the vibe-coding audience. It holds reduced fields only.
+
 ## Scope and naming
 
 - Name `edmonton-open-data-landscape`: no conflicts on PyPI, npm or web search;
