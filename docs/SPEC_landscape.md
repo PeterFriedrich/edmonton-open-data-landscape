@@ -169,6 +169,17 @@ the 119 series counted once.
 Notebooks first; a shareable static site later. Keep outputs as data files so a
 site can read them.
 
+**Page structure (owner, 2026-10-14): search is the way in, not the destination.**
+A search box and results table alone would duplicate the portal's own search (out
+of scope). So each result opens what the portal doesn't have:
+- the dataset's closest neighbours;
+- the datasets it joins with on shared fields (neighbourhood, ward, address);
+- its theme (cluster) and that theme's place on the map;
+- its actual update rate against the publisher's claim.
+
+For the technical audience, the payoff is "this dataset, plus the ones you can
+join it to". The theme overview and the map are the management audience's way in.
+
 ## Scope and naming
 
 - Name `edmonton-open-data-landscape`: no conflicts on PyPI, npm or web search;
