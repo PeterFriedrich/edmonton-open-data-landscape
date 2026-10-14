@@ -12,6 +12,10 @@ be explored by how they relate to each other rather than one at a time.
   the meta-structure (clusters, gaps, links).
 - **Non-goal:** replicating the City's own per-dataset exploration tools (e.g.
   311 Explorer, the portal's built-in previews).
+- **Audience (owner, 2026-10-14):** primarily technical people looking for a
+  dataset to start a project. Secondarily, management-level people who want to
+  see what's available, or to vibe-code something with an AI assistant. Not
+  aimed at the general public.
 
 ## Core questions
 
