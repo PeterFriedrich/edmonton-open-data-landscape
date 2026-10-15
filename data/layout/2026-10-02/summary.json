@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-02",
+  "mode": "anchor",
+  "epoch": 1,
+  "anchor_date": "2026-10-02",
+  "seed": 0,
+  "anchor_reasons": [
+    "first week"
+  ],
+  "n_units": 920,
+  "n_kept": 0,
+  "new": [],
+  "removed": [],
+  "new_topic_units": [],
+  "move_median": null,
+  "move_p95": null,
+  "drift_median": 0.0,
+  "drift_p95": 0.0,
+  "gate": {
+    "median": 2.5,
+    "p95": 5.0,
+    "applies": false
+  },
+  "prev": null
+}

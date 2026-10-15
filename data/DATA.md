@@ -167,3 +167,11 @@ read live yet.
   `smallest`/`largest` can hold individuals' names and addresses (e.g. Business
   Licences rental-licence holders). Never publish them unfiltered (spec, Data
   sources).
+
+## Derived data committed to the repo
+
+### `data/layout/<date>/` (map coordinates, `src/layout.py`)
+- `coords.csv`: `unit, x, y, epoch, is_new`; one row per similarity unit. `summary.json`: mode (`anchor` / `warm` / `new_topic`), move and cumulative drift as % of map extent, new and removed unit ids.
+- **Committed on purpose**, unlike `data/processed/`: next week's layout starts from it, so losing it reshuffles the map. It holds unit ids and numbers only, never description text.
+- `<date>` is the similarity snapshot's date. Units come from `data/processed/similarity/<date>/units.csv`, and coordinates are in arbitrary t-SNE units (only nearness means anything).
+- 2026-10-02 is the first anchor (epoch 1, seed 0, 920 units).

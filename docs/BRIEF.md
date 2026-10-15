@@ -38,6 +38,7 @@ Maps the structure of Edmonton's open data catalogue (data.edmonton.ca, Socrata)
 - **2026-10-02** — **Cluster–category agreement is reported with and without dominant categories (>10% of units), and only ARI gets an interval, from 80% subsets without replacement.** … Rejected: bootstrap with replacement (duplicated units agree with themselves; ARI's interval sat above its value on a many-small-clusters fixture, 0.604 vs [0.631, 0.683]); intervals for NMI/AMI …
 - **2026-10-02** — **Embeddings use fastembed (ONNX Runtime) or model2vec only; no torch / sentence-transformers.** … Rejected: torch-based models (disk).
 - **2026-10-15** — **M4 site = hand-written HTML pages plus a small stdlib build step; JS fills each dataset's panel from one small JSON file per unit.** … Rejected: Python + Jinja2 generated pages (its main gain, ~920 real per-dataset pages, is moot); Quarto + OJS (a heavy tool built for documents, not an app-like search page).
+- **2026-10-15** — **Map layout is warm-started from last week and gated: a normal week moves at most 2.5% median, 5% p95 of map extent, or the run fails.** … Rejected: a fresh t-SNE each week (5.5–9.2% median move, p95 24–37%); sklearn's default `early_exaggeration=12` (cancels the init).
 
 ## Open work
 
