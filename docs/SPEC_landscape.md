@@ -184,7 +184,7 @@ join it to". The theme overview and the map are the management audience's way in
   `distinct` query confirms the values overlap (pitfalls 4–5; M3 joinability).
   A shared name is not a shared key.
 - **Per-dataset data is built as one small JSON file per unit, loaded on demand**,
-  not as about 920 generated pages. This is proposed, not decided.
+  not as about 920 generated pages. Decided 2026-10-15 with the M4 stack (`docs/DECISIONS.md`).
 - **A "For AI" export** (`catalog.json`: ids, titles, API URLs, relationships)
   serves the vibe-coding audience. It holds reduced fields only.
 
