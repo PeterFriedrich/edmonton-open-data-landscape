@@ -21,7 +21,7 @@ _spec.loader.exec_module(make_brief)
 def test_committed_brief_is_current():
     target = REPO / make_brief.BRIEF
     if not target.exists():
-        pytest.skip("no docs/BRIEF.md committed (private repo: the brief is pasted, not synced)")
+        pytest.skip("no docs/BRIEF.md committed (the brief is pasted, not synced)")
     assert target.read_text(encoding="utf-8") == make_brief.build(REPO), (
         "docs/BRIEF.md is stale — its sources changed since it was generated. "
         "Run `python scripts/make_brief.py --write` and commit it in this PR."
@@ -32,7 +32,8 @@ def _fixture(root: Path) -> Path:
     (root / "docs").mkdir()
     (root / "CLAUDE.md").write_text(
         "# Claude Instructions\n\n## Project\nToy fiscal analysis.\n\n"
-        "## Key Files\n- `TODO.md` — the backlog. Read it first.\n\n## Other\nx\n")
+        "## Key Files\n- `TODO.md` — the backlog. Read it first.\n"
+        "- `docs/SPIKE.md` — the spike on St. Albert parcels. Details.\n\n## Other\nx\n")
     (root / "TODO.md").write_text(
         "# TODO\n\n## Open work\n\n### Group one\n\n"
         "- [ ] **Open item.** First line\n  continues here.\n"
@@ -41,7 +42,10 @@ def _fixture(root: Path) -> Path:
     (root / "docs" / "DECISIONS.md").write_text(
         "# Decisions\n\n| When | Decision | Full reasoning |\n|---|---|---|\n"
         "| 2026-09-01 | ~~**Old rule**~~ SUPERSEDED 2026-09-02 | `docs/X.md` |\n"
-        "| 2026-09-02 | **New rule.** Long tail sentence. | `docs/X.md` |\n")
+        "| 2026-09-02 | **New rule.** Long tail sentence. | `docs/X.md` |\n"
+        "| 2026-09-03 | **Parked on St. Albert licensing.** Middle sentence. "
+        "Rejected: scraping it anyway. | `docs/X.md` |\n"
+        "| 2026-09-04 | **Keep the flag.** Why. The `x`-rejected clause stays. | `docs/X.md` |\n")
     (root / "docs" / "SCOPE.md").write_text("# SCOPE\n\n## Out of scope\n\n- **Rasters.** No GIS.\n")
     (root / "requirements.txt").write_text("# comment\npandas==2.3.0\n")
     return root
@@ -58,8 +62,30 @@ def test_brief_carries_each_source(tmp_path):
 def test_brief_drops_dead_and_closed_rows(tmp_path):
     brief = make_brief.build(_fixture(tmp_path))
     for dropped in ("Old rule", "Closed but not yet archived", "Archived.",
-                    "nested child", "Long tail sentence"):
+                    "nested child", "Long tail sentence", "Middle sentence", "`x`-rejected"):
         assert dropped not in brief, dropped
+
+
+def test_decision_keeps_its_rejected_sentence_and_survives_st(tmp_path):
+    """Two bugs alberta-regional-viz found (2026-09-30), fixed first in
+    edmonton-tax-viz: the summary was the first sentence only, so "Rejected:"
+    clauses were lost, and the sentence split cut "St. Albert" to "St."."""
+    brief = make_brief.build(_fixture(tmp_path))
+    assert "**Parked on St. Albert licensing.** … Rejected: scraping it anyway." in brief
+
+
+def test_doc_map_survives_st_and_clipped_decision_has_one_ellipsis(tmp_path):
+    """Reported by alberta-regional-viz (2026-10-01): the doc map split on its
+    own regex, cutting "St. Albert" to "St", and a clipped first sentence plus
+    a rejected sentence rendered "… … Rejected"."""
+    root = _fixture(tmp_path)
+    decisions = root / "docs" / "DECISIONS.md"
+    decisions.write_text(decisions.read_text() + "| 2026-09-05 | **"
+                         + "word " * 60 + "end.** Rejected: the short one. | `docs/X.md` |\n")
+    brief = make_brief.build(root)
+    assert "- `docs/SPIKE.md` — the spike on St. Albert parcels" in brief
+    assert "… …" not in brief
+    assert "word … Rejected: the short one." in brief
 
 
 def test_empty_data_issues_is_not_reported_as_none(tmp_path):
