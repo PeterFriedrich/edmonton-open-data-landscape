@@ -30,13 +30,13 @@ Maps the structure of Edmonton's open data catalogue (data.edmonton.ca, Socrata)
 
 ## Locked decisions
 
-- **2026-10-02** — AMENDED 2026-10-02 by the next row (guard test now exists).
-- **2026-10-02** — **Public reduced snapshots are built from an allow-list** (`src/reduce_snapshot.py`), so a field Socrata adds later stays private until someone decides otherwise; dropped custom keys are counted in …
-- **2026-10-02** — **Weekly snapshots run from cron and the reduced public copy is pushed straight to master** (`scripts/weekly_snapshot.sh`, Fri 08:00 UTC, in its own worktree on origin/master).
-- **2026-10-02** — **"Real dataset" = Discovery type `dataset` with no parent; series = same category + same name once numbers are replaced; members kept, counts reported both ways** (1421 / 920 on 2026-10-02).
-- **2026-10-02** — **Schema similarity ignores location-only columns** (geometry datatypes, bare lat/long, `location_address/_city/_state/_zip`, Socrata's `:@computed_region_*`); address, ward and neighbourhood columns …
-- **2026-10-02** — **Cluster–category agreement is reported with and without dominant categories (>10% of units), and only ARI gets an interval, from 80% subsets without replacement.**
-- **2026-10-02** — **Embeddings use fastembed (ONNX Runtime) or model2vec only; no torch / sentence-transformers.**
+- **2026-10-02** — AMENDED 2026-10-02 by the next row (guard test now exists). … Rejected: committing full raw snapshots here (column summaries can carry personal information, which the licence excludes; coverage of the catalogue's own prose is unclear); keeping them only on the …
+- **2026-10-02** — **Public reduced snapshots are built from an allow-list** (`src/reduce_snapshot.py`), so a field Socrata adds later stays private until someone decides otherwise; dropped custom keys are counted in … Rejected: a deny-list of known prose fields (a new prose field would leak).
+- **2026-10-02** — **Weekly snapshots run from cron and the reduced public copy is pushed straight to master** (`scripts/weekly_snapshot.sh`, Fri 08:00 UTC, in its own worktree on origin/master). … Rejected: a weekly PR (a merge chore every week, and history is lost while a PR sits unmerged).
+- **2026-10-02** — **"Real dataset" = Discovery type `dataset` with no parent; series = same category + same name once numbers are replaced; members kept, counts reported both ways** (1421 / 920 on 2026-10-02). … Rejected: column-signature matching for series (only 23 shared signatures across 54 datasets, it misses most series); "Terms of Use" as a third-party signal (it usually means the City's own terms).
+- **2026-10-02** — **Schema similarity ignores location-only columns** (geometry datatypes, bare lat/long, `location_address/_city/_state/_zip`, Socrata's `:@computed_region_*`); address, ward and neighbourhood columns … Rejected: keeping them and relying on IDF (they are common enough to dominate short schemas but not common enough for IDF to silence).
+- **2026-10-02** — **Cluster–category agreement is reported with and without dominant categories (>10% of units), and only ARI gets an interval, from 80% subsets without replacement.** … Rejected: bootstrap with replacement (duplicated units agree with themselves; ARI's interval sat above its value on a many-small-clusters fixture, 0.604 vs [0.631, 0.683]); intervals for NMI/AMI …
+- **2026-10-02** — **Embeddings use fastembed (ONNX Runtime) or model2vec only; no torch / sentence-transformers.** … Rejected: torch-based models (disk).
 
 ## Open work
 
@@ -62,7 +62,7 @@ Maps the structure of Edmonton's open data catalogue (data.edmonton.ca, Socrata)
 
 - `TODO.md` — living backlog and **the source of truth for progress**
 - `docs/DECISIONS.md` — append-only index of locked decisions: one row + pointer to the doc holding the full reasoning
-- `docs/TOKEN_EFFICIENCY.md` — context/token hygiene (what NOT to read raw, session-summary archiving)
+- `docs/TOKEN_EFFICIENCY.md` — context/token hygiene (what NOT to read raw, session-summary archiving) and disk use (scratch intermediates, `df -h /` before a big build)
 - `docs/DATA_ISSUES.md` — register of defects in data we DON'T control: evidence, what it breaks here, and **whether the publisher has been told**
 - `docs/AUDIT_LEDGER.md` — coverage map of executed audit runs
 - `data/DATA.md` — data source details, column names, known quirks

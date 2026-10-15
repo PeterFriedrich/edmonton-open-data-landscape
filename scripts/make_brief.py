@@ -8,18 +8,21 @@ the repo already maintains:
   - the ``## Project`` paragraph and the doc map of ``CLAUDE.md``;
   - ``docs/SCOPE.md``, the one hand-kept input ("out of scope / don't recommend");
   - the stack, from ``requirements.txt`` / ``package.json``;
-  - live rows of ``docs/DECISIONS.md`` (struck or SUPERSEDED rows left out);
+  - live rows of ``docs/DECISIONS.md`` (struck or SUPERSEDED rows left out),
+    each cut to its first sentence plus its first rejected-alternative sentence;
   - open items of ``TODO.md``;
   - rows of ``docs/DATA_ISSUES.md``;
   - the reply format a research answer must end with (``docs/CLAUDE_WEB.md``).
 
 Two ways to use it (setup in ``docs/CLAUDE_WEB.md``):
 
-  - **Public repo:** ``--write`` commits ``docs/BRIEF.md``, and a claude.ai
-    Project syncs it through the GitHub integration. ``tests/test_brief.py``
-    fails the merge gate when the committed file no longer matches.
-  - **Private repo** (the integration 404s on private repos, anthropics/claude-code
-    #98050): run with no flag and paste the output into the chat.
+  - **Synced** (the default, public or private repo): ``--write`` commits
+    ``docs/BRIEF.md``, and a claude.ai Project syncs it through the GitHub
+    integration. ``tests/test_brief.py`` fails the merge gate when the
+    committed file no longer matches.
+  - **Pasted** (fallback, if the integration fails for the repo; reported on
+    private repos, anthropics/claude-code #98050): run with no flag and paste
+    the output into the chat.
 
 The output carries no date or commit SHA on purpose: it must be a pure function
 of the source files, or the staleness test would fail on every commit.
@@ -49,6 +52,16 @@ EXIT_FAIL = 6
 # 330 live rows, 469 KB uncut).
 ITEM_CHARS = 280
 DECISION_CHARS = 200
+REJECTED_CHARS = 200
+
+# A sentence ends at . ! or ? (optionally closing a **bold** span) followed by
+# space — but not after an abbreviation: "St. Albert" would otherwise cut a
+# summary to "St.". Fixed-width lookbehinds, one per abbreviation.
+_ABBR = "".join(rf"(?<!\b{re.escape(a)})" for a in ("St.", "e.g.", "i.e.", "vs.", "No."))
+SENTENCE_END = re.compile(rf"(?:(?<=[.!?]){_ABBR}|(?<=[.!?]\*\*))\s+")
+# The row's alternatives are what a reviewer most needs, to stop recommending
+# them back.
+REJECTED = re.compile(r"(?<!-)\b(?:[Rr]ejected|[Rr]efused|[Nn]ot chosen)\b")
 
 ITEM = re.compile(r"^- \[( |x)\] ")
 DEAD_ROW = re.compile(r"^\W*~~|\b(?:SUPERSEDED|RETRACTED|REVERSED)\s+\d{4}-\d{2}-\d{2}")
@@ -122,7 +135,7 @@ def doc_map(root: Path) -> list[str]:
     for line in _section(_read(root, "CLAUDE.md"), "Key Files").splitlines():
         m = re.match(r"^- (`[^`]+`)\s+—\s+(.*)", line)
         if m:
-            first = re.split(r"(?<=[.!?])\s|\s—\s", m.group(2), maxsplit=1)[0]
+            first = re.split(rf"{SENTENCE_END.pattern}|\s—\s", m.group(2), maxsplit=1)[0]
             out.append(f"- {m.group(1)} — {first.rstrip('.')}")
     return out
 
@@ -153,8 +166,13 @@ def decisions(root: Path) -> list[str]:
     for cells in _table_rows(_read(root, "docs/DECISIONS.md")):
         if len(cells) < 2 or DEAD_ROW.search(cells[1]):
             continue
-        first = re.split(r"(?<=[.!?])\s|(?<=[.!?]\*\*)\s", cells[1], maxsplit=1)[0]
-        out.append(f"- **{cells[0]}** — {_clip(first, DECISION_CHARS)}")
+        sentences = SENTENCE_END.split(cells[1])
+        line = f"- **{cells[0]}** — {_clip(sentences[0], DECISION_CHARS)}"
+        rejected = next((s for s in sentences[1:] if REJECTED.search(s)), None)
+        if rejected:
+            # A clipped first sentence already ends in "…".
+            line += (" " if line.endswith("…") else " … ") + _clip(rejected, REJECTED_CHARS)
+        out.append(line)
     return out
 
 
