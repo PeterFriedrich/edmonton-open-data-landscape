@@ -188,6 +188,28 @@ join it to". The theme overview and the map are the management audience's way in
 - **A "For AI" export** (`catalog.json`: ids, titles, API URLs, relationships)
   serves the vibe-coding audience. It holds reduced fields only.
 
+**Proposed 2026-10-16, not yet approved: show the portal's own structure, and keep it out of the neighbours.**
+The spot-check's graffiti survey shows the problem. Its top-5 neighbours on all
+three signals are other Edmonton Insight Community surveys (Photo Radar, Golfing, …),
+matched on shared title wording, boilerplate and demographic columns. The two
+Graffiti Audit datasets rank around 300 of 920. The catalogue has structure the
+portal never presents, and today it swamps the neighbour lists instead of being shown.
+- **Programmes:** families wider than a series (a series is the same name once
+  numbers are replaced). Evidence in data already harvested: a shared title suffix
+  (283 units end "- Edmonton Insight Community"; no other suffix reaches 5), copied
+  Purpose boilerplate (561 of 790 filled; Speed Check Sign 264, census ~170, monthly
+  survey 88), identical column sets, tags, and parent/derived links. The title
+  suffix alone finds only the survey panel, so detection needs the other signals.
+- **The panel gets two parts:** "where it sits" (category, programme, series, and
+  how many siblings, each browsable) and "what the structure misses" (neighbours and
+  join partners). A sibling from the same programme is not shown as a neighbour.
+- **Browse and filter by structure:** category, programme, series and update rate,
+  as facets on search. This also answers core question 2 for readers: how the
+  portal is actually organised compared with its categories.
+- **Neighbours are computed with programme boilerplate removed** (shared title
+  suffix, Purpose text used on more than 3 datasets, demographic columns that
+  occur only within a programme), then re-scored on the spot-check labels.
+
 ## Scope and naming
 
 - Name `edmonton-open-data-landscape`: no conflicts on PyPI, npm or web search;
