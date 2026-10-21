@@ -58,6 +58,27 @@ def test_harvest_fails_hard_when_listing_is_short():
         hv.harvest(fetch, sleep=no_sleep)
 
 
+def test_harvest_fails_when_the_api_reports_nothing():
+    # 0 reported, 0 returned: the unique-ids check alone would pass this.
+    fetch, _ = fake_fetch([])
+    with pytest.raises(hv.HarvestError, match="below the floor of 1"):
+        hv.harvest(fetch, sleep=no_sleep)
+
+
+def test_harvest_fails_below_the_floor():
+    fetch, _ = fake_fetch([asset(i) for i in range(150)])
+    with pytest.raises(hv.HarvestError, match="only 150 assets, below the floor of 200"):
+        hv.harvest(fetch, sleep=no_sleep, min_assets=200)
+
+
+def test_floor_is_half_the_latest_earlier_snapshot(tmp_path):
+    assert hv.asset_floor(tmp_path, "2026-10-02") == 1
+    for date, n in [("2026-10-02", 2088), ("2026-10-10", 2090), ("2026-10-23", 10)]:
+        (tmp_path / date).mkdir()
+        (tmp_path / date / "manifest.json").write_text(json.dumps({"n_unique_ids": n}))
+    assert hv.asset_floor(tmp_path, "2026-10-16") == 1045  # 2026-10-10, not the later one
+
+
 def test_harvest_fails_hard_on_duplicates_from_shifting_pages():
     assets = [asset(i) for i in range(150)]
     assets[120] = asset(5)  # order shifted between pages: one id seen twice, one never

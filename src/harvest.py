@@ -84,11 +84,12 @@ def page_url(offset):
     return f"{DISCOVERY_URL}?{urllib.parse.urlencode(q)}"
 
 
-def harvest(fetch, sleep=time.sleep):
+def harvest(fetch, sleep=time.sleep, min_assets=1):
     """Page through the whole listing. Returns (results, stats).
 
     Socrata caps and pages silently, so the run fails hard unless the unique
-    ids collected equal the server's resultSetSize."""
+    ids collected equal the server's resultSetSize. That check alone passes an
+    API reporting 0 with nothing returned, so fewer than `min_assets` also fails."""
     results, pages, offset, expected = [], 0, 0, None
     while True:
         if pages:
@@ -113,7 +114,20 @@ def harvest(fetch, sleep=time.sleep):
              "pages": pages}
     if unique != expected:
         raise HarvestError(f"collected {unique} unique ids, server reports {expected} (stats: {stats})")
+    if unique < min_assets:
+        raise HarvestError(f"only {unique} assets, below the floor of {min_assets} (stats: {stats})")
     return results, stats
+
+
+def asset_floor(out_root, date):
+    """Half the asset count of the latest snapshot before `date`, or 1 with none.
+
+    History 2026-10-02..16: 2088, 2088, 2090. A real week moves a few assets; a
+    halving means the API is down or answering empty, not a quiet week."""
+    prior = sorted(d for d in Path(out_root).glob("*/manifest.json") if d.parent.name < date)
+    if not prior:
+        return 1
+    return max(1, json.loads(prior[-1].read_text())["n_unique_ids"] // 2)
 
 
 def code_sha():
@@ -150,7 +164,8 @@ def main(argv=None):
     date = args.date or started.date().isoformat()
     if (Path(args.out) / date).exists():  # fail before spending any requests
         raise HarvestError(f"{Path(args.out) / date} already exists; refusing to overwrite a snapshot")
-    results, stats = harvest(lambda url: http_get_json(url, token))
+    floor = asset_floor(args.out, date)
+    results, stats = harvest(lambda url: http_get_json(url, token), min_assets=floor)
     manifest = {
         "source": DISCOVERY_URL, "domain": DOMAIN, "page_size": PAGE_SIZE, "pace_s": PACE_S,
         "retrieved_started_utc": started.isoformat(timespec="seconds"),
