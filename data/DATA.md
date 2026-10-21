@@ -8,7 +8,9 @@ with a status saying whether they have been told.
 **Download completeness:** an API that pages or caps (`$limit` on Socrata, for
 instance) truncates *silently* — it returns exactly that many rows with no
 error. Every downloader verifies its row count against the live server count
-and fails hard on a mismatch.
+and fails hard on a mismatch. A matching count can still be empty (the API
+reports 0 and returns nothing), so the catalogue harvest also fails below half the
+latest earlier snapshot's asset count (`asset_floor` in `src/harvest.py`, 2026-10-21).
 
 **Vintage:** record, per source, the dataset id, the retrieval timestamp and
 the publisher's own last-updated stamp. A guard must measure the DATA (row
