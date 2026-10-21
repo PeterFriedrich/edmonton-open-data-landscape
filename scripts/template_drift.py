@@ -49,8 +49,8 @@ MAX_LISTED = 12
 IGNORED = [
     "copier.yml", "tests/test_copier.py",
     "session-summary/*.md", "docs/FINDINGS_*.md", "docs/BRIEF.md",
-    "README.md", "docs/SCOPE.md", "data/DATA.md",
-    "TODO.md", "docs/DECISIONS.md", "docs/TODO_archive.md",
+    "README.md", "docs/SCOPE.md", "data/DATA.md", "docs/ASSUMPTIONS.md",
+    "TODO.md", "docs/DECISIONS.md", "docs/TODO_archive.md", "docs/AUDIT_LEDGER.md",
 ]
 
 
