@@ -54,3 +54,25 @@ jobs:
       # supersedes an earlier one has that row marked in place.
       - name: Check decisions log
         run: python scripts/check_decisions_log.py
+
+      # Every third-party import is pinned in requirements.txt, so rebuilding
+      # the venv cannot silently drop a package installed by hand.
+      - name: Check requirements cover imports
+        run: python scripts/check_requirements.py
+
+      # Every assumptions-index row has a known status, a size and a pointer, and a
+      # VERIFIED row names a test that exists. Completeness is each project's own test.
+      - name: Check assumptions index
+        run: python scripts/check_assumptions.py
+
+      # A copier update returns the fit table as one conflict block; taking either
+      # side whole drops the project's answers or the template's new rows. On a
+      # PR it also compares with the base branch, the only way to see answers
+      # wiped back to `not evaluated`. A failed fetch skips that (fails open).
+      - name: Check change-pipeline fit table
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          base=""
+          if [ -n "$BASE_REF" ] && git fetch -q origin "$BASE_REF"; then base="--base FETCH_HEAD"; fi
+          python scripts/check_fit_table.py $base

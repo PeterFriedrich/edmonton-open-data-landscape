@@ -79,21 +79,26 @@ class Row:
     text: str  # the Decision cell
 
 
-def parse_rows(md: str) -> list[Row]:
-    """Table rows of the decisions log. Splits on unescaped ``|`` only: a row
+def cells(line: str) -> list[str]:
+    """A markdown table row's cells. Splits on unescaped ``|`` only: a row
     carrying a pipe inside inline code is scattered by a naive split."""
+    return [c.strip() for c in re.split(r"(?<!\\)\|", line.strip().strip("|"))]
+
+
+def parse_rows(md: str) -> list[Row]:
+    """Table rows of the decisions log."""
     rows: list[Row] = []
     for lineno, line in enumerate(md.splitlines(), 1):
         if not line.startswith("|") or re.match(r"^\|\s*-{3,}", line):
             continue
-        cells = [c.strip() for c in re.split(r"(?<!\\)\|", line.strip().strip("|"))]
-        if len(cells) < 2 or cells[0].lower() == "when":
+        row = cells(line)
+        if len(row) < 2 or row[0].lower() == "when":
             continue
-        m = DATE.match(cells[0])
+        m = DATE.match(row[0])
         when = None
         if m and m.group(3):
             when = date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
-        rows.append(Row(lineno, when, cells[1]))
+        rows.append(Row(lineno, when, row[1]))
     return rows
 
 

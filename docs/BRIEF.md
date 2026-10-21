@@ -54,6 +54,8 @@ Maps the structure of Edmonton's open data catalogue (data.edmonton.ca, Socrata)
 - **M5 — Publish** with attribution and unofficial-status note. Blocked on licence wording. Checklist (research report, spec Review log): attribution + licence link on every page, the README and notebooks; third-party assets get their own attribution line; non-endorsement …
 - **Confirm licence and attribution wording.** Read the live licence page (`data.edmonton.ca/stories/s/City-of-Edmonton-Open-Data-Terms-of-Use/msh8-if28/`), including its version and whether it still cites FOIP. Also read the portal's Developer, User's Guide and Open City Policy …
 - **Optional, before M5: ask the City (opendata@edmonton.ca).** Not needed while uncertain material (column summaries, descriptions) stays in the private repo. Read the live licence page first; it may answer questions 1–2 without asking. Draft with 5 questions: …
+- **Answer `docs/CHANGE_PIPELINE.md` §"This project's fit"** (template update a104a5f, taken 2026-10-21 with the table left for later). 29 rows still `not evaluated`; each gets `adopted` + mechanism, `later: <trigger>`, `no: <reason>` or `n/a`. `scripts/check_fit_table.py` passes …
+- **Check the first cron push under branch protection: Fri 2026-10-23 08:00 UTC.** `master` requires `test` since 2026-10-21 with `enforce_admins: false`, so the cron's direct push should land. Confirm `data/snapshots/2026-10-23/` on `origin/master`. If it was rejected, …
 - **GitHub name-conflict search** for `edmonton-open-data-landscape`.
 - **Pick the reference for "what's missing"** (core question 3): another Socrata city (e.g. Calgary) or a standard expected-datasets list. Cross-city needs a category mapping. **Research prompt drafted 2026-10-02:** …
 - **Fill the rest of the CLAUDE.md template placeholders** (domain invariants) once the harvest shows what they are.
@@ -66,8 +68,10 @@ Maps the structure of Edmonton's open data catalogue (data.edmonton.ca, Socrata)
 
 - `TODO.md` — living backlog and **the source of truth for progress**
 - `docs/DECISIONS.md` — append-only index of locked decisions: one row + pointer to the doc holding the full reasoning
+- `docs/CHANGE_PIPELINE.md` — the path a change takes, in order: before the PR, the PR, merging, after the merge, and when to stop and ask
 - `docs/TOKEN_EFFICIENCY.md` — context/token hygiene (what NOT to read raw, session-summary archiving) and disk use (scratch intermediates, `df -h /` before a big build)
 - `docs/DATA_ISSUES.md` — register of defects in data we DON'T control: evidence, what it breaks here, and **whether the publisher has been told**
+- `docs/ASSUMPTIONS.md` — index of the premises a published number rests on that no guard proves: status, rough size if wrong, pointer to the evidence
 - `docs/AUDIT_LEDGER.md` — coverage map of executed audit runs
 - `data/DATA.md` — data source details, column names, known quirks
 - `docs/REMOTE_VM.md` — **read FIRST in a Claude Code web/remote VM session**: network-policy constraints, environment setup

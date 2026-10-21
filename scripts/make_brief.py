@@ -41,6 +41,9 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from check_decisions_log import cells  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 BRIEF = "docs/BRIEF.md"
 
@@ -99,11 +102,6 @@ def _section(md: str, heading: str) -> str:
     return m.group(1).strip() if m else ""
 
 
-def _cells(line: str) -> list[str]:
-    # Unescaped pipes only, as in check_decisions_log.parse_rows.
-    return [c.strip() for c in re.split(r"(?<!\\)\|", line.strip().strip("|"))]
-
-
 def _table_rows(md: str) -> list[list[str]]:
     """Data rows of every markdown table in ``md``, header and rule skipped."""
     rows, in_table = [], False
@@ -116,7 +114,7 @@ def _table_rows(md: str) -> list[list[str]]:
             continue
         if re.match(r"^\|\s*:?-{3,}", line):
             continue
-        rows.append(_cells(line))
+        rows.append(cells(line))
     return rows
 
 
