@@ -188,7 +188,7 @@ join it to". The theme overview and the map are the management audience's way in
 - **A "For AI" export** (`catalog.json`: ids, titles, API URLs, relationships)
   serves the vibe-coding audience. It holds reduced fields only.
 
-**Proposed 2026-10-16, not yet approved: show the portal's own structure, and keep it out of the neighbours.**
+**Approved 2026-11-03 (proposed 2026-10-16; `docs/DECISIONS.md`): show the portal's own structure, and keep it out of the neighbours.**
 The spot-check's graffiti survey shows the problem. Its top-5 neighbours on all
 three signals are other Edmonton Insight Community surveys (Photo Radar, Golfing, …),
 matched on shared title wording, boilerplate and demographic columns. The two
