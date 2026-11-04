@@ -147,6 +147,15 @@ unless noted:
   category "Externally Sourced Datasets".
 - **The owner field is a placeholder:** `owner.display_name` = "Beta Test Site"
   on `24uj-dj8v`. Don't use it to identify a publisher.
+- **Programme boilerplate (`src/programmes.py`, 2026-10-02 snapshot, 920 units).**
+  At the unit level (series counted once), Speed Check Sign's 264 datasets are 4
+  units, the census Purpose text covers 89 units and the monthly-survey Purpose text
+  84. Copied Purpose text has **near-duplicate variants**: four census texts
+  ("Census information is used by every municipal department…") differ slightly and
+  cover 3 units each, so exact matching misses them; two "To better describe
+  (visually) the areas…" texts are separate families sharing 4 units. 83 of the 84
+  monthly-survey units are also "- Edmonton Insight Community" units. A series's
+  members can carry different Purpose texts (20 units).
 
 **Licence (per asset):** on Discovery page 0, `metadata.license` was
 **"See Terms of Use"** for 88 assets, **"Canada Open Government Licence"** for 5,
