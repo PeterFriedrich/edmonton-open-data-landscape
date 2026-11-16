@@ -1,12 +1,23 @@
-# SPEC — Edmonton Open Data Landscape
+# SPEC — Alberta Open Data Landscape (formerly Edmonton)
 
 Starter spec, 2026-09-30. Candidates to test, not commitments — nothing here is
 locked until it has a row in `docs/DECISIONS.md`.
 
 ## Purpose
 
-Map the structure of Edmonton's open data catalogue as a whole, so datasets can
+Map the structure of Alberta's open data catalogues as a whole, so datasets can
 be explored by how they relate to each other rather than one at a time.
+
+**Scope widened 2026-11-16 (owner; `docs/DECISIONS.md`):** from Edmonton's
+catalogue alone to several Alberta catalogues: data.edmonton.ca, data.calgary.ca
+(Socrata, 413 datasets on 2026-11-16) and open.alberta.ca (CKAN, `opendata` type,
+3,021 records), with StatCan's table list (WDS, 8,283 tables) as a later source.
+The repo is to be renamed `alberta-open-data-landscape` as a separate, coordinated
+step (Scope and naming). **Edmonton stays the deepest case:** the spot-check, the
+programme work and the M4 site are Edmonton-first, and nothing in flight is
+dropped. The other catalogues come in first as **search sources** (Outputs) and
+as the reference for core question 3; full landscape treatment for them is not
+committed.
 
 - **In scope:** similarity between datasets, metrics across the catalogue, and
   the meta-structure (clusters, gaps, links).
@@ -23,12 +34,31 @@ be explored by how they relate to each other rather than one at a time.
    time coverage)?
 2. What clusters emerge, and how do they compare with the portal's own categories?
 3. Where is the catalogue dense or sparse, and what looks missing?
-   *Needs an external reference — see pitfall 7.*
+   *Needs an external reference — see pitfall 7.* Calgary's catalogue and the
+   province's are now in scope as that reference (2026-11-16).
 4. How are size, update frequency, age and column counts distributed?
 5. Which datasets share fields or keys, and so could be joined?
 6. How does the catalogue change over time (additions, removals, updates)?
 
 ## Data sources
+
+### Other catalogues (added 2026-11-16)
+
+Harvested per source; each source keeps its own raw snapshots. Measured from
+this server on 2026-11-16, not yet harvested:
+
+| Source | Platform | Size | Notes |
+|---|---|---|---|
+| data.calgary.ca | Socrata (same Discovery API as Edmonton) | 413 datasets | Edmonton's harvester differs only by domain. Its categories won't match Edmonton's (pitfall 7). |
+| open.alberta.ca | CKAN (`/api/3/action/package_search`, no key) | 37,654 records: 3,021 `opendata`, 34,614 `publications` (almost all PDF) | `opendata` only at first. Alberta Energy Regulator holds 1,339 of the 3,021, so it is hidden from search by default. CKAN holds no column schemas: text only, and checking contents means downloading a file. Licence: mostly OGL–Alberta (per `alberta-regional-viz`), not yet checked per record. |
+| StatCan WDS | REST (`getAllCubesList`) | 8,283 tables | Later. Dimensions stand in for columns. Census Profile is outside WDS. |
+
+Licence, privacy and snapshot-storage rules below apply to every source: raw
+snapshots stay private and the public repo gets reduced fields only. Each
+source's licence and attribution string is confirmed before anything from it
+is published.
+
+### data.edmonton.ca
 
 data.edmonton.ca (Socrata): SODA API plus catalogue metadata.
 
@@ -165,6 +195,14 @@ the 119 series counted once.
   hand-labelled sample of ~20 datasets with their expected neighbours,
   scored before any neighbour output is shown.
 - **Change log:** added / removed / updated between snapshots.
+- **Search (agent-facing, 2026-11-16):** free-text search across all sources,
+  ranked by embedding plus TF-IDF similarity, for Claude sessions in other
+  projects to shortlist datasets before pulling data. One record format for every
+  source (`source, id, title, publisher, description, tags, columns, formats,
+  updated, url`), one adapter per platform (Socrata, CKAN, later WDS), one index
+  per source per snapshot. A command line first (`src/search.py`, Edmonton only
+  today), then a small MCP server over the same function so the model stays
+  loaded; registering it for all sessions is the `server` session's call.
 
 Notebooks first; a shareable static site later. Keep outputs as data files so a
 site can read them.
@@ -212,12 +250,16 @@ portal never presents, and today it swamps the neighbour lists instead of being 
 
 ## Scope and naming
 
-- Name `edmonton-open-data-landscape`: no conflicts on PyPI, npm or web search;
-  GitHub name search still to do.
-- Edmonton only for now. City comparison expected to stay small; if it grows,
-  split into its own project rather than renaming this one. Any cross-city
-  comparison needs a category mapping — Calgary's categories won't match
-  Edmonton's.
+- **Renaming to `alberta-open-data-landscape` (owner, 2026-11-16).** This
+  reverses the earlier plan ("if city comparison grows, split into its own
+  project rather than renaming this one"): the multi-portal search and core
+  question 3 both need the other catalogues next to Edmonton's, so they share
+  one repo. The rename is a separate step after this scope change: GitHub repo,
+  local folder, cron path, tmux session and auto-memory folder move together,
+  with the `server` session for the shared files (`TODO.md`).
+- Name check for `alberta-open-data-landscape`: still to do (PyPI, npm, GitHub, web).
+- Any cross-catalogue comparison needs a category mapping — Calgary's and the
+  province's categories won't match Edmonton's.
 
 ## Tech stack
 
@@ -236,6 +278,9 @@ Front end undecided; notebooks first.
 3. Similarity signals and clustering (incl. targeted key-column row access).
 4. Graph and landscape visualisation.
 5. Publish, with attribution and an unofficial-status note.
+6. Multi-source search (added 2026-11-16): Calgary and open.alberta.ca harvests,
+   the shared record format, search across sources, then the MCP server.
+   Independent of M4–M5.
 
 ## Open questions (with proposed answers — not locked)
 
@@ -245,7 +290,7 @@ Front end undecided; notebooks first.
 | Text vs. schema similarity, or weighted? | Keep separate first; report where they disagree (same topic/different schema and vice versa) — that is a finding. Weight later. |
 | Snapshot cadence? | Weekly from M1b. Full raw snapshots go to a private repo; this public repo gets reduced snapshots (see Data sources). Weekly is enough because publisher timestamps are recorded (pitfall 3). Revisit size/retention after the first pull. |
 | Notebooks or static site? | Notebooks through milestone 4; outputs as data files. |
-| Where does city comparison live, when does it split? | Minimal reference catalogue here for core question 3; split if it grows past that. |
+| ~~Where does city comparison live, when does it split?~~ | Settled 2026-11-16: here, in the renamed repo (Scope and naming). |
 | Licence wording? | Working string in Data sources. Confirm on the live licence page before publishing; optionally ask the City (email drafted 2026-10-01). |
 | GitHub name conflicts? | To check. |
 

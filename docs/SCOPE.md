@@ -12,4 +12,5 @@ no bullet here — the brief already carries `docs/DECISIONS.md`.
 
 ## Out of scope
 
+- **open.alberta.ca `publications`** (34,614 records, almost all PDF reports) — a document search, not a dataset catalogue; only the 3,021 `opendata` records are in scope for now. `docs/SPEC_landscape.md` §Data sources.
 - **Per-dataset exploration tools** (row browsers, dashboards for a single dataset, a 311 Explorer clone) — the City already provides these; this project's unit of analysis is the catalogue. `docs/SPEC_landscape.md`.
