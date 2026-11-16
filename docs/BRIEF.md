@@ -9,10 +9,11 @@ the brief wins.
 
 ## What it is
 
-Maps the structure of Edmonton's open data catalogue (data.edmonton.ca, Socrata) as a whole — dataset similarity, clusters, joinable fields, catalogue metrics and change over time — from catalogue metadata. It is **not** a per-dataset explorer; the City's own tools (311 Explorer, portal previews) cover that. Spec: `docs/SPEC_landscape.md`.
+Maps the structure of Alberta's open data catalogues as a whole — Edmonton (data.edmonton.ca, Socrata) in depth; Calgary (Socrata) and the province (open.alberta.ca, CKAN) first as search sources and the what's-missing reference (scope widened 2026-11-16; rename to `alberta-open-data-landscape` pending) — dataset similarity, clusters, joinable fields, catalogue metrics and change over time — from catalogue metadata. It is **not** a per-dataset explorer; the City's own tools (311 Explorer, portal previews) cover that. Spec: `docs/SPEC_landscape.md`.
 
 ## Out of scope — don't recommend back
 
+- **open.alberta.ca `publications`** (34,614 records, almost all PDF reports) — a document search, not a dataset catalogue; only the 3,021 `opendata` records are in scope for now. `docs/SPEC_landscape.md` §Data sources.
 - **Per-dataset exploration tools** (row browsers, dashboards for a single dataset, a 311 Explorer clone) — the City already provides these; this project's unit of analysis is the catalogue. `docs/SPEC_landscape.md`.
 
 ## Stack
@@ -41,6 +42,7 @@ Maps the structure of Edmonton's open data catalogue (data.edmonton.ca, Socrata)
 - **2026-10-15** — **Map layout is warm-started from last week and gated: a normal week moves at most 2.5% median, 5% p95 of map extent, or the run fails.** … Rejected: a fresh t-SNE each week (5.5–9.2% median move, p95 24–37%); sklearn's default `early_exaggeration=12` (cancels the init).
 - **2026-10-16** — **Spot-check labelling rule: a neighbour is "yes" only if it is plausibly the same topic or a real join key; a sibling from the same programme (e.g. another Edmonton Insight Community survey) is … Rejected: counting programme siblings as yes (programme membership is visible from the title and belongs in the panel's structure section, not the neighbour list).
 - **2026-11-03** — **Programme detection and structure facets are approved: `src/programmes.py` assigns a `programme_key` with its evidence, a boilerplate-stripped similarity variant is scored on the spot-check, and … Rejected: leaving programme siblings in the neighbour list.
+- **2026-11-16** — **Scope widens from Edmonton's catalogue to Alberta's open-data catalogues (data.edmonton.ca, data.calgary.ca, open.alberta.ca; StatCan WDS later), and the repo is to be renamed … Rejected: a separate `open-data-search` repo (the search and the what's-missing question both need the catalogues side by side); growing it here under the Edmonton name.
 
 ## Open work
 
@@ -51,6 +53,8 @@ Maps the structure of Edmonton's open data catalogue (data.edmonton.ca, Socrata)
 - **Hand-label a ~20-dataset neighbour spot-check** before showing any neighbour output (spec, Outputs). **In progress 2026-10-02 (owner labels):** `python -m src.spotcheck sample data/processed/similarity/2026-10-02` → `data/spotcheck/2026-10-02_pairs.csv`: 20 units (2 Surveys, 1 …
 - **After the spot-check: text-signal variants, scored on the same labelled pairs.** (a) **Purpose field, filtered**: add `General-Information_Purpose` to the text only where that exact text is used on ≤ 3 datasets. 2026-10-02: filled on 790 of 1421 real datasets but only 209 …
 - **Programme detection and structure facets** (proposed 2026-10-16, owner-approved 2026-11-03; spec, Outputs). Why: for the graffiti survey (`t6uf-8aus`), all three signals' top 5 are other Insight Community surveys; the Graffiti Audit units rank text ~295, schema ~703, embed …
+- **Rename the repo to `alberta-open-data-landscape`** (scope widened 2026-11-16, `docs/DECISIONS.md`). One coordinated step, between sessions: name check (PyPI, npm, GitHub, web); GitHub rename (old URLs redirect); move `~/edmonton-open-data-landscape`; ask `server` to update the …
+- **M6 — Multi-source search** (spec, Outputs and Milestones). Propose the module layout first. (1) Shared record format and a per-platform adapter: Socrata (`domain`; Edmonton, Calgary) and CKAN (`base_url`; open.alberta.ca `opendata`, AER hidden by default). (2) Harvest by hand …
 - **M4 — Graph and landscape visualisation.** **Stack research back 2026-10-13** (`research/edmonton-open-data-landscape/stack_reply_2026-10-13.md`, checked by the `edmonton-civic-map` session). Spec, Review log 2026-10-13 has what was accepted. **Owner decides first:** (1) ~~the …
 - **M5 — Publish** with attribution and unofficial-status note. Blocked on licence wording. Checklist (research report, spec Review log): attribution + licence link on every page, the README and notebooks; third-party assets get their own attribution line; non-endorsement …
 - **Confirm licence and attribution wording.** Read the live licence page (`data.edmonton.ca/stories/s/City-of-Edmonton-Open-Data-Terms-of-Use/msh8-if28/`), including its version and whether it still cites FOIP. Also read the portal's Developer, User's Guide and Open City Policy …

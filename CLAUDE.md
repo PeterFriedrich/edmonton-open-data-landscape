@@ -6,7 +6,7 @@
      derive from the code (layout, dependency lists) does not. -->
 
 ## Project
-Maps the structure of Edmonton's open data catalogue (data.edmonton.ca, Socrata) as a whole — dataset similarity, clusters, joinable fields, catalogue metrics and change over time — from catalogue metadata. It is **not** a per-dataset explorer; the City's own tools (311 Explorer, portal previews) cover that. Spec: `docs/SPEC_landscape.md`.
+Maps the structure of Alberta's open data catalogues as a whole — Edmonton (data.edmonton.ca, Socrata) in depth; Calgary (Socrata) and the province (open.alberta.ca, CKAN) first as search sources and the what's-missing reference (scope widened 2026-11-16; rename to `alberta-open-data-landscape` pending) — dataset similarity, clusters, joinable fields, catalogue metrics and change over time — from catalogue metadata. It is **not** a per-dataset explorer; the City's own tools (311 Explorer, portal previews) cover that. Spec: `docs/SPEC_landscape.md`.
 
 ## Key Files
 - `TODO.md` — living backlog and **the source of truth for progress**. Read it first to know what to work on; update it in place as items open/close. Session summaries narrate *what happened*; TODO.md owns *what's left*. Never redo a closed item without asking — its `## Done` section lists every closed item in one line each. Conversely, an *open* item can be stale — reproduce the symptom and re-measure the stated cause before acting on it. **When an item closes, move its body to `docs/TODO_archive.md` and leave a `## Done` line** (`python tools/todo_archive.py` does it in bulk) — this file is read every session, so it must hold live work, not history.
