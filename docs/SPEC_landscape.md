@@ -44,12 +44,15 @@ committed.
 
 ### Other catalogues (added 2026-11-16)
 
-Harvested per source; each source keeps its own raw snapshots. Measured from
-this server on 2026-11-16, not yet harvested:
+Harvested per source; each source keeps its own raw snapshots, in the same
+private repo: Edmonton's at the root (moving into `edmonton/` with the rename),
+every other source in its own subfolder (`calgary/<date>/`, `alberta/<date>/`).
+Measured from this server on 2026-11-16; Calgary first harvested 2026-11-17
+(`data/DATA.md`), the others not yet:
 
 | Source | Platform | Size | Notes |
 |---|---|---|---|
-| data.calgary.ca | Socrata (same Discovery API as Edmonton) | 413 datasets | Edmonton's harvester differs only by domain. Its categories won't match Edmonton's (pitfall 7). |
+| data.calgary.ca | Socrata (same Discovery API as Edmonton) | 935 assets, 412 datasets | `python -m src.harvest --source calgary`. Its categories won't match Edmonton's (pitfall 7). |
 | open.alberta.ca | CKAN (`/api/3/action/package_search`, no key) | 37,654 records: 3,021 `opendata`, 34,614 `publications` (almost all PDF) | `opendata` only at first. Alberta Energy Regulator holds 1,339 of the 3,021, so it is hidden from search by default. CKAN holds no column schemas: text only, and checking contents means downloading a file. Licence: mostly OGL–Alberta (per `alberta-regional-viz`), not yet checked per record. |
 | StatCan WDS | REST (`getAllCubesList`) | 8,283 tables | Later. Dimensions stand in for columns. Census Profile is outside WDS. |
 
@@ -203,6 +206,22 @@ the 119 series counted once.
   per source per snapshot. A command line first (`src/search.py`, Edmonton only
   today), then a small MCP server over the same function so the model stays
   loaded; registering it for all sessions is the `server` session's call.
+  *Layout (owner, 2026-11-17):*
+  - The record also carries `category` and `n_members` (series size), which
+    the Edmonton output already prints.
+  - Each source is ranked on its own and prints its own top `k`; there is no
+    merged list. A merged list lets the larger provincial catalogue crowd out
+    Edmonton hits, and its TF-IDF half would have to be fitted across sources,
+    which changes Edmonton's rankings.
+  - `--source` defaults to every harvested source. Hidden publishers (Alberta
+    Energy Regulator) are left out by default, with the number hidden printed.
+  - Modules stay flat in `src/`: `harvest.py` (Socrata, `--source`),
+    `harvest_ckan.py`, `records.py` (source registry and one adapter per
+    platform), `search.py` (`--source`, `--json`). Search vectors are cached
+    per source per snapshot, keyed by a hash of the text so a new snapshot
+    embeds only what changed.
+  - In M6 the new sources get raw private snapshots only: no reduced public
+    copy and no cron, since nothing from them is published yet.
 
 Notebooks first; a shareable static site later. Keep outputs as data files so a
 site can read them.
