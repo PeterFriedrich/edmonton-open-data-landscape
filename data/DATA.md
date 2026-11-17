@@ -203,6 +203,27 @@ read live yet.
 - **Categories:** Transportation/Transit 151, Environment 143, Government 136,
   Demographics 112, … They don't match Edmonton's.
 
+### open.alberta.ca catalogue metadata (CKAN)
+- **Publisher / URL:** Government of Alberta, https://open.alberta.ca. CKAN
+  `api/3/action/package_search`, no key, `fq=type:opendata`, `sort=id asc`,
+  `rows=1000` (CKAN's cap), paged with `start`.
+- **Retrieved:** first full listing **2026-11-17 17:39–17:40 UTC**, by
+  `python -m src.harvest_ckan`: 4 pages, 3,021 unique ids = `count`, no
+  duplicates, ids ascending. Raw only: private repo, `alberta/2026-11-17/`
+  (3.4 MB gzipped, ~26 MB raw). By hand; no cron and no public reduced copy.
+- **Scope:** `opendata` records only. The other 34,614 records are
+  `publications`, almost all PDF, and out of scope (`docs/SCOPE.md`).
+- **Contents:** all 3,021 `active`, none `private`. Every package has an
+  organisation and a description (`notes`); 10 have no tags, 2 no resources.
+  No column schemas: a package's resources are files (XML, HTML, XLSX, CSV, …)
+  with format, size and URL only. 306 packages have a resource with
+  `datastore_active` (row API possible; not yet tried).
+- **Publishers:** Alberta Energy Regulator 1,339 (hidden from search by
+  default), Environment and Parks 405, Health 385, Treasury Board and Finance
+  313, Agriculture and Forestry 167, …
+- **Licence (`license_id`):** OGLA 3,019, OGNL 2. Not yet checked against the
+  licence pages; nothing from this source is published.
+
 ## Derived data committed to the repo
 
 ### `data/layout/<date>/` (map coordinates, `src/layout.py`)

@@ -47,13 +47,13 @@ committed.
 Harvested per source; each source keeps its own raw snapshots, in the same
 private repo: Edmonton's at the root (moving into `edmonton/` with the rename),
 every other source in its own subfolder (`calgary/<date>/`, `alberta/<date>/`).
-Measured from this server on 2026-11-16; Calgary first harvested 2026-11-17
-(`data/DATA.md`), the others not yet:
+Measured from this server on 2026-11-16; Calgary and open.alberta.ca first
+harvested 2026-11-17 (`data/DATA.md`), StatCan not yet:
 
 | Source | Platform | Size | Notes |
 |---|---|---|---|
 | data.calgary.ca | Socrata (same Discovery API as Edmonton) | 935 assets, 412 datasets | `python -m src.harvest --source calgary`. Its categories won't match Edmonton's (pitfall 7). |
-| open.alberta.ca | CKAN (`/api/3/action/package_search`, no key) | 37,654 records: 3,021 `opendata`, 34,614 `publications` (almost all PDF) | `opendata` only at first. Alberta Energy Regulator holds 1,339 of the 3,021, so it is hidden from search by default. CKAN holds no column schemas: text only, and checking contents means downloading a file. Licence: mostly OGL–Alberta (per `alberta-regional-viz`), not yet checked per record. |
+| open.alberta.ca | CKAN (`/api/3/action/package_search`, no key) | 37,654 records: 3,021 `opendata`, 34,614 `publications` (almost all PDF) | `opendata` only at first. Alberta Energy Regulator holds 1,339 of the 3,021, so it is hidden from search by default. CKAN holds no column schemas: text only, and checking contents means downloading a file. `python -m src.harvest_ckan`. Licence: mostly OGL–Alberta (per `alberta-regional-viz`), not yet checked per record. |
 | StatCan WDS | REST (`getAllCubesList`) | 8,283 tables | Later. Dimensions stand in for columns. Census Profile is outside WDS. |
 
 Licence, privacy and snapshot-storage rules below apply to every source: raw
