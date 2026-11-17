@@ -217,7 +217,11 @@ read live yet.
   organisation and a description (`notes`); 10 have no tags, 2 no resources.
   No column schemas: a package's resources are files (XML, HTML, XLSX, CSV, …)
   with format, size and URL only. 306 packages have a resource with
-  `datastore_active` (row API possible; not yet tried).
+  `datastore_active`, but the row API doesn't work: `datastore_search` on two
+  of them returned HTTP 500 (2026-11-17). So `src.search --peek` skips this source.
+- **Search records** (`src/records.py`): one per package, `url` =
+  `https://open.alberta.ca/opendata/<name>` (checked 200), `category` = the
+  `topic` list joined (empty for 1,460), `updated` = `metadata_modified`.
 - **Publishers:** Alberta Energy Regulator 1,339 (hidden from search by
   default), Environment and Parks 405, Health 385, Treasury Board and Finance
   313, Agriculture and Forestry 167, …

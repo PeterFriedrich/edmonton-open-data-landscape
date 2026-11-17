@@ -203,8 +203,8 @@ the 119 series counted once.
   projects to shortlist datasets before pulling data. One record format for every
   source (`source, id, title, publisher, description, tags, columns, formats,
   updated, url`), one adapter per platform (Socrata, CKAN, later WDS), one index
-  per source per snapshot. A command line first (`src/search.py`, Edmonton only
-  today), then a small MCP server over the same function so the model stays
+  per source per snapshot. A command line first (`src/search.py`; Edmonton, Calgary and
+  open.alberta.ca since 2026-11-17), then a small MCP server over the same function so the model stays
   loaded; registering it for all sessions is the `server` session's call.
   *Layout (owner, 2026-11-17):*
   - The record also carries `category` and `n_members` (series size), which
