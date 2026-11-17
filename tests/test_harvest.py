@@ -89,7 +89,7 @@ def test_harvest_fails_hard_on_duplicates_from_shifting_pages():
 
 def test_pages_ask_for_a_stable_order():
     # Without it Socrata orders by relevance and offset paging can skip an id (issue #26).
-    assert "order=dataset_id" in hv.page_url(0)
+    assert "order=dataset_id" in hv.page_url(0, "data.edmonton.ca")
 
 
 def test_harvest_paces_between_requests():
@@ -186,3 +186,31 @@ def test_main_refuses_existing_snapshot_before_any_request(tmp_path, monkeypatch
     monkeypatch.setattr(hv, "http_get_json", no_network)
     with pytest.raises(hv.HarvestError, match="refusing to overwrite"):
         hv.main(["--out", str(tmp_path), "--date", "2026-10-02"])
+
+
+def run_main(tmp_path, monkeypatch, *argv):
+    urls = []
+
+    def fetch(url, token=None):
+        urls.append(url)
+        return {"resultSetSize": 2, "results": [asset(1), asset(2)]}
+    monkeypatch.setattr(hv, "http_get_json", fetch)
+    hv.main(["--out", str(tmp_path), "--date", "2026-11-17", *argv])
+    return urls
+
+
+def test_default_source_is_edmonton_at_the_snapshot_root(tmp_path, monkeypatch):
+    # The weekly cron passes no --source and the private repo's history sits at the root.
+    urls = run_main(tmp_path, monkeypatch)
+    assert all("domains=data.edmonton.ca" in u for u in urls)
+    assert json.loads((tmp_path / "2026-11-17/manifest.json").read_text())["domain"] == "data.edmonton.ca"
+
+
+def test_named_source_is_asked_for_and_kept_in_its_own_folder(tmp_path, monkeypatch):
+    # An earlier Edmonton snapshot at the root must not set Calgary's floor.
+    (tmp_path / "2026-11-13").mkdir()
+    (tmp_path / "2026-11-13/manifest.json").write_text(json.dumps({"n_unique_ids": 2095}))
+    urls = run_main(tmp_path, monkeypatch, "--source", "calgary")
+    assert urls and all("domains=data.calgary.ca" in u for u in urls)
+    assert json.loads((tmp_path / "calgary/2026-11-17/manifest.json").read_text())["domain"] == "data.calgary.ca"
+    assert not (tmp_path / "2026-11-17").exists()

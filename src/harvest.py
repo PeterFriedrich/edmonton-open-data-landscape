@@ -1,11 +1,14 @@
-"""Harvest the data.edmonton.ca catalogue listing (Socrata Discovery API) into a
-dated raw snapshot.
+"""Harvest a Socrata catalogue listing (Discovery API; data.edmonton.ca by
+default) into a dated raw snapshot.
 
 Metadata only: no per-asset `/api/views` calls (TODO.md, M1a scope). The raw
 snapshot holds descriptions, so it goes to the PRIVATE snapshots repo clone;
 `src/reduce_snapshot.py` makes the public copy.
 
-    python -m src.harvest [--out DIR] [--date YYYY-MM-DD]
+    python -m src.harvest [--source NAME] [--out DIR] [--date YYYY-MM-DD]
+
+Edmonton's snapshots sit at the root of --out; every other source gets its own
+subfolder (`calgary/<date>/`).
 
 Env: SOCRATA_APP_TOKEN (optional, sent as X-App-Token),
      LANDSCAPE_RAW_SNAPSHOT_DIR (default data/raw/private-snapshots).
@@ -29,7 +32,8 @@ log = logging.getLogger("harvest")
 
 ROOT = Path(__file__).resolve().parents[1]
 DISCOVERY_URL = "https://api.us.socrata.com/api/catalog/v1"
-DOMAIN = "data.edmonton.ca"
+# source name -> (Socrata domain, subfolder of the raw snapshot root)
+SOURCES = {"edmonton": ("data.edmonton.ca", ""), "calgary": ("data.calgary.ca", "calgary")}
 PAGE_SIZE = 100
 PACE_S = 5.0
 MAX_CONSECUTIVE_FAILURES = 5
@@ -77,14 +81,14 @@ def fetch_with_retry(fetch, url, sleep):
     raise HarvestError(f"{MAX_CONSECUTIVE_FAILURES} consecutive failures for {url}; stopping")
 
 
-def page_url(offset):
+def page_url(offset, domain):
     # The default order is relevance, which is not stable across requests: on
     # 2026-10-09 one id came back on two pages and another on none (issue #26).
-    q = {"domains": DOMAIN, "limit": PAGE_SIZE, "offset": offset, "order": "dataset_id"}
+    q = {"domains": domain, "limit": PAGE_SIZE, "offset": offset, "order": "dataset_id"}
     return f"{DISCOVERY_URL}?{urllib.parse.urlencode(q)}"
 
 
-def harvest(fetch, sleep=time.sleep, min_assets=1):
+def harvest(fetch, sleep=time.sleep, min_assets=1, domain=SOURCES["edmonton"][0]):
     """Page through the whole listing. Returns (results, stats).
 
     Socrata caps and pages silently, so the run fails hard unless the unique
@@ -94,7 +98,7 @@ def harvest(fetch, sleep=time.sleep, min_assets=1):
     while True:
         if pages:
             sleep(PACE_S)
-        page = fetch_with_retry(fetch, page_url(offset), sleep)
+        page = fetch_with_retry(fetch, page_url(offset, domain), sleep)
         pages += 1
         size = page["resultSetSize"]
         if expected is None:
@@ -156,23 +160,26 @@ def main(argv=None):
     ap.add_argument("--out", default=os.environ.get("LANDSCAPE_RAW_SNAPSHOT_DIR",
                                                    str(ROOT / "data/raw/private-snapshots")))
     ap.add_argument("--date", help="snapshot folder name (default: today, UTC)")
+    ap.add_argument("--source", choices=sorted(SOURCES), default="edmonton")
     args = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
+    domain, subdir = SOURCES[args.source]
+    out = Path(args.out) / subdir
     token = os.environ.get("SOCRATA_APP_TOKEN") or None
     started = datetime.now(timezone.utc)
     date = args.date or started.date().isoformat()
-    if (Path(args.out) / date).exists():  # fail before spending any requests
-        raise HarvestError(f"{Path(args.out) / date} already exists; refusing to overwrite a snapshot")
-    floor = asset_floor(args.out, date)
-    results, stats = harvest(lambda url: http_get_json(url, token), min_assets=floor)
+    if (out / date).exists():  # fail before spending any requests
+        raise HarvestError(f"{out / date} already exists; refusing to overwrite a snapshot")
+    floor = asset_floor(out, date)
+    results, stats = harvest(lambda url: http_get_json(url, token), min_assets=floor, domain=domain)
     manifest = {
-        "source": DISCOVERY_URL, "domain": DOMAIN, "page_size": PAGE_SIZE, "pace_s": PACE_S,
+        "source": DISCOVERY_URL, "domain": domain, "page_size": PAGE_SIZE, "pace_s": PACE_S,
         "retrieved_started_utc": started.isoformat(timespec="seconds"),
         "retrieved_finished_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "app_token_used": bool(token), "user_agent": USER_AGENT, "code_sha": code_sha(), **stats,
     }
-    snap = write_snapshot(args.out, date, results, manifest)
+    snap = write_snapshot(out, date, results, manifest)
     log.info("snapshot_written path=%s assets=%d", snap, stats["n_unique_ids"])
     return 0
 
