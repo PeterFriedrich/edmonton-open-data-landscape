@@ -179,6 +179,30 @@ read live yet.
   Licences rental-licence holders). Never publish them unfiltered (spec, Data
   sources).
 
+### data.calgary.ca catalogue metadata (Socrata)
+- **Publisher / URL:** City of Calgary, https://data.calgary.ca. Same Discovery
+  API as Edmonton, `domains=data.calgary.ca`.
+- **Retrieved:** first full listing **2026-11-17 00:41–00:42 UTC**, by
+  `python -m src.harvest --source calgary`: 10 pages, 935 unique ids =
+  `resultSetSize`, no duplicates, no app token. Raw only: private repo,
+  `calgary/2026-11-17/` (0.53 MB gzipped). By hand; no cron and no public
+  reduced copy yet.
+- **Types:** dataset 412, map 280, chart 146, filter 55, story 23, file 17,
+  href 2. All `official`. 504 assets have a parent.
+- **Through Edmonton's inventory and units code, unchanged:** 412 candidates,
+  504 derived, 19 non-tabular; 333 units, 22 of them series (largest: Census By
+  Ward, 21 members). Every unit has text and columns.
+- ⚠️ **`licence_class` and the custom-field columns are wrong for Calgary.**
+  `src/inventory.py` knows Edmonton's attribution names and metadata keys, so it
+  calls 827 of 935 assets `third_party` and leaves update frequency empty
+  (Calgary's key is `Time/Date_Update-Frequency`). Roles and series don't depend
+  on either. Don't publish or count on those columns for Calgary.
+- **Licence (`metadata.license`):** "See Terms of Use" 869, none 60, "Canada Open
+  Government Licence" 6. Calgary's terms are not yet read; nothing from this
+  source is published.
+- **Categories:** Transportation/Transit 151, Environment 143, Government 136,
+  Demographics 112, … They don't match Edmonton's.
+
 ## Derived data committed to the repo
 
 ### `data/layout/<date>/` (map coordinates, `src/layout.py`)
