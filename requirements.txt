@@ -6,6 +6,8 @@ copier==9.18.2
 numpy==2.5.3
 scipy==1.18.1
 scikit-learn==1.9.1
+# MCP server over search (src/mcp_server.py, tests/test_mcp_server.py).
+mcp==2.3.0
 # Embedding text variant (src/embeddings.py); not needed by CI — tests inject the model.
 fastembed==0.8.1
 # Notebooks (notebooks/); not needed by CI.

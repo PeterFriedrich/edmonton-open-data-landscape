@@ -6,3 +6,5 @@ copier==9.18.2
 numpy==2.5.3
 scipy==1.18.1
 scikit-learn==1.9.1
+# MCP server over search (src/mcp_server.py, tests/test_mcp_server.py).
+mcp==2.3.0

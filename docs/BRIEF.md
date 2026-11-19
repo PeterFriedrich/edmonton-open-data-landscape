@@ -23,6 +23,7 @@ Maps the structure of Alberta's open data catalogues as a whole — Edmonton (da
 - numpy==2.5.3
 - scipy==1.18.1
 - scikit-learn==1.9.1
+- mcp==2.3.0
 - fastembed==0.8.1
 - pandas==3.0.6
 - matplotlib==3.11.2
@@ -44,6 +45,7 @@ Maps the structure of Alberta's open data catalogues as a whole — Edmonton (da
 - **2026-11-03** — **Programme detection and structure facets are approved: `src/programmes.py` assigns a `programme_key` with its evidence, a boilerplate-stripped similarity variant is scored on the spot-check, and … Rejected: leaving programme siblings in the neighbour list.
 - **2026-11-16** — **Scope widens from Edmonton's catalogue to Alberta's open-data catalogues (data.edmonton.ca, data.calgary.ca, open.alberta.ca; StatCan WDS later), and the repo is to be renamed … Rejected: a separate `open-data-search` repo (the search and the what's-missing question both need the catalogues side by side); growing it here under the Edmonton name.
 - **2026-11-17** — **Multi-source search (M6) ranks each source on its own and prints a top `k` per source; `--source` defaults to every harvested source; the shared record is the spec's ten fields plus `category` and … Rejected: one merged ranking (the provincial catalogue, 1,682 visible records against 920 Edmonton units, can crowd Edmonton out, and a shared TF-IDF fit would change Edmonton's rankings); a …
+- **2026-11-19** — **The search's MCP server is stdio, with one tool (`search_datasets`) that returns the `--json` object, a default `k` of 5, and the model loaded once per server process.** … Rejected: a shared localhost HTTP service (a port, a service unit and auth to reach it from the laptop, for one or two searching sessions); a hand-written stdlib JSON-RPC server (the official `mcp` …
 
 ## Open work
 
@@ -64,6 +66,7 @@ Maps the structure of Alberta's open data catalogues as a whole — Edmonton (da
 - **GitHub name-conflict search** for `edmonton-open-data-landscape`.
 - **Pick the reference for "what's missing"** (core question 3): another Socrata city (e.g. Calgary) or a standard expected-datasets list. Cross-city needs a category mapping. **Research prompt drafted 2026-10-02:** …
 - **Fill the rest of the CLAUDE.md template placeholders** (domain invariants) once the harvest shows what they are.
+- **`src.search -k 0` or a negative `k` is not rejected** (found building the MCP server, 2026-11-19). `np.argsort(...)[:k]` with `-k -3` returns every record but 3; `-k 0` returns nothing. The MCP tool checks 1–25; the CLI should too.
 - **`src/similarity.py` crashes after writing when `--inventory` is outside the repo** (code review of the programmes PR, 2026-11-03). `inv_path.resolve().relative_to(ROOT)` raises `ValueError` after `units.csv`/`neighbours.csv` are written, so no `summary.json`. …
 
 ## Known upstream data defects
