@@ -112,6 +112,39 @@ def print_hit(score, r, show_peek):
         print("      rows: " + json.dumps(peek(r))[:600])
 
 
+def load_model():
+    from fastembed import TextEmbedding  # local env only; not in requirements-ci.txt
+    return TextEmbedding(MODEL, cache_dir=str(Path.home() / ".cache/fastembed"))
+
+
+def build_index(name, snap, model, include_hidden):
+    """(meta, index) for one source's snapshot; index is None when it has no records."""
+    records, dropped = build_records(load_raw(snap), name)
+    records, n_hidden = split_hidden(records, SOURCES[name]["hidden"], include_hidden)
+    texts = [search_text(r) for r in records]
+    index = None
+    if texts:
+        E = embed_cached(texts, name, snap.name, lambda ts: list(model.embed(ts)))
+        tfidf = TfidfVectorizer(stop_words="english", sublinear_tf=True)
+        index = (records, E, tfidf, tfidf.fit_transform(texts))
+    meta = {"snapshot": snap.name, "n_records": len(records), "n_hidden": n_hidden,
+            "hidden_publishers": sorted(SOURCES[name]["hidden"]) if n_hidden else [],
+            "dropped": dropped}
+    return meta, index
+
+
+def query_hits(q, indexes, model, k):
+    qe = np.asarray(list(model.query_embed([q]))[0], dtype=np.float32)
+    qe /= np.linalg.norm(qe)
+    return {name: rank(q, ix[0], ix[1], qe, ix[2], ix[3], k) if ix else [] for name, ix in indexes.items()}
+
+
+def hits_json(hits, with_peek):
+    return {name: [{"score": round(s, 4), **r, "description": r["description"][:JSON_DESCRIPTION_CHARS],
+                    **({"rows": peek(r)} if with_peek else {})}
+                   for s, r in hs] for name, hs in hits.items()}
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("queries", nargs="+")
@@ -126,28 +159,14 @@ def main(argv=None):
     if args.snapshot and len(names) != 1:
         raise SystemExit("--snapshot needs exactly one --source")
 
-    from fastembed import TextEmbedding  # local env only; not in requirements-ci.txt
-    model = TextEmbedding(MODEL, cache_dir=str(Path.home() / ".cache/fastembed"))
-
+    model = load_model()
     indexes, meta = {}, {}
     for name in names:
         snaps = [Path(args.snapshot)] if args.snapshot else snapshot_dirs(name)[-1:]
         if not snaps:
             meta[name], indexes[name] = {"skipped": "no snapshot harvested"}, None
             continue
-        snap = snaps[0]
-        records, dropped = build_records(load_raw(snap), name)
-        records, n_hidden = split_hidden(records, SOURCES[name]["hidden"], args.include_hidden)
-        texts = [search_text(r) for r in records]
-        if texts:
-            E = embed_cached(texts, name, snap.name, lambda ts: list(model.embed(ts)))
-            tfidf = TfidfVectorizer(stop_words="english", sublinear_tf=True)
-            indexes[name] = (records, E, tfidf, tfidf.fit_transform(texts))
-        else:
-            indexes[name] = None
-        meta[name] = {"snapshot": snap.name, "n_records": len(records), "n_hidden": n_hidden,
-                      "hidden_publishers": sorted(SOURCES[name]["hidden"]) if n_hidden else [],
-                      "dropped": dropped}
+        meta[name], indexes[name] = build_index(name, snaps[0], model, args.include_hidden)
 
     out = {"sources": meta, "queries": []}
     if not args.json:
@@ -159,15 +178,9 @@ def main(argv=None):
                    if m["n_hidden"] else "")
             print(f"{name}: snapshot {m['snapshot']}, {m['n_records']} records{hid}")
     for q in args.queries:
-        qe = np.asarray(list(model.query_embed([q]))[0], dtype=np.float32)
-        qe /= np.linalg.norm(qe)
-        hits = {name: rank(q, ix[0], ix[1], qe, ix[2], ix[3], args.k) if ix else []
-                for name, ix in indexes.items()}
+        hits = query_hits(q, indexes, model, args.k)
         if args.json:
-            out["queries"].append({"query": q, "hits": {
-                name: [{"score": round(s, 4), **r, "description": r["description"][:JSON_DESCRIPTION_CHARS],
-                        **({"rows": peek(r)} if args.peek else {})}
-                       for s, r in hs] for name, hs in hits.items()}})
+            out["queries"].append({"query": q, "hits": hits_json(hits, args.peek)})
             continue
         print(f"\n== {q}")
         for name, hs in hits.items():

@@ -222,6 +222,14 @@ the 119 series counted once.
     embeds only what changed.
   - In M6 the new sources get raw private snapshots only: no reduced public
     copy and no cron, since nothing from them is published yet.
+  *MCP server (owner, 2026-11-19):* `src/mcp_server.py`, stdio transport, one
+  tool `search_datasets` that returns the same object as `--json`. The model and
+  indexes load on the first call and stay loaded; each call picks up a newer
+  snapshot. Its default `k` is 5, not 12: at 12 a query is about 10k tokens,
+  Claude Code's warning level for tool output. From the owner's laptop the
+  registered command is this one run over ssh, so no port is opened. Rejected:
+  a shared HTTP service (a port, a service unit and auth, for one or two
+  searching sessions).
 
 Notebooks first; a shareable static site later. Keep outputs as data files so a
 site can read them.
