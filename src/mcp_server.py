@@ -1,7 +1,8 @@
-"""MCP server (stdio) over `src.search`, so the embedding model stays loaded between
-searches instead of reloading on every command-line run.
+"""MCP server over `src.search`, so the embedding model stays loaded between searches
+instead of reloading on every command-line run.
 
-    .venv/bin/python -m src.mcp_server
+    .venv/bin/python -m src.mcp_server                      # stdio, one process per client
+    .venv/bin/python -m src.mcp_server --transport http     # shared, http://127.0.0.1:8765/mcp
 
 One tool, `search_datasets`, returning the same object as `python -m src.search --json`.
 The model and each source's index load on the first call that needs them; every call
@@ -9,11 +10,15 @@ checks for a newer snapshot and rebuilds only that source. A source whose vector
 not cached yet is embedded inside that first call (minutes for a new snapshot with many
 changed records; 13m43s for all three from empty), so run the CLI once after a harvest to
 warm the cache. Registering the server with
-Claude Code is the `server` session's call; from another machine, run this command over
-ssh as the server command (stdio needs no open port).
+Claude Code is the `server` session's call; from another machine, run the stdio command
+over ssh (no open port, no tunnel).
+
+HTTP binds to loopback only, with no option to change it: this box has public ports.
+It is stateless (no MCP session ids), so a client keeps working across a service restart.
 
 Everything printed to stdout is protocol: progress goes to stderr (`embed_cached`).
 """
+import argparse
 import sys
 import threading
 import traceback
@@ -24,6 +29,8 @@ from mcp.server.mcpserver.exceptions import ToolError
 from src import search
 
 MAX_K = 25
+HOST, PORT, HTTP_PATH = "127.0.0.1", 8765, "/mcp"
+HTTP_APP = {"streamable_http_path": HTTP_PATH, "stateless_http": True}
 
 server = MCPServer(
     "open-data-search",
@@ -88,5 +95,16 @@ def search_datasets(queries: list[str], sources: str = "all", k: int = 5,
                         for q in queries]}
 
 
+def main(argv=None):
+    p = argparse.ArgumentParser(description="MCP server over src.search")
+    p.add_argument("--transport", choices=["stdio", "http"], default="stdio")
+    p.add_argument("--port", type=int, default=PORT, help=f"http only (default {PORT}); always on {HOST}")
+    a = p.parse_args(argv)
+    if a.transport == "stdio":
+        server.run("stdio")
+    else:
+        server.run("streamable-http", host=HOST, port=a.port, **HTTP_APP)
+
+
 if __name__ == "__main__":
-    server.run("stdio")
+    main()

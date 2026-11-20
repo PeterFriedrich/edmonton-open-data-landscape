@@ -8,3 +8,4 @@ scipy==1.18.1
 scikit-learn==1.9.1
 # MCP server over search (src/mcp_server.py, tests/test_mcp_server.py).
 mcp==2.3.0
+uvicorn==0.54.0  # comes with mcp; the HTTP test serves the app with it directly
