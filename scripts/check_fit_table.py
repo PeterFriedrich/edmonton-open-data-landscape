@@ -73,7 +73,7 @@ FIT_STEPS = [
     "Sync note for claude.ai-synced files",
     "CI green, and `master` requires the `test` check",
     "No timed PR check-ins",
-    "The owner merges",
+    "Docs-only self-merge per the core, or `overrides core: self-merge` (name the paths)",
     "A push after the owner looked is announced on the PR",
     "Pre-push hook enabled (`git config core.hooksPath .githooks`)",
     "Work confirmed on `master` with `git merge-base`",

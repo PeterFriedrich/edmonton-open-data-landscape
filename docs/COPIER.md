@@ -47,6 +47,9 @@ yet. Before turning protection on, have it push with a fine-grained token of an 
 `edmonton-tax-viz` does this with a `HEARTBEAT_TOKEN` secret (its `docs/RUNBOOK.md`).
 A token push, unlike `GITHUB_TOKEN`, does trigger workflows, so the commit must stage
 only data paths that the deploy workflow ignores, or each refresh redeploys itself.
+The other way out is to let that push be the deploy: `edmonton-civic-map` dropped the deploy
+step from `refresh.yml`, so its token push starts `pages.yml` once (refresh run 42525589251,
+2026-11-08, pushed 8476956 past the required `test` check; pages run 42526187824).
 
 Then answer `docs/CHANGE_PIPELINE.md` §"This project's fit" for the new project.
 
@@ -139,3 +142,32 @@ extracted *from*, and its owned files are deliberately its own (e.g.
 `edmonton-audit` in place of `project-audit`). Every update would conflict.
 Changes reach it by a session reading the template's PR diff and porting what
 fits.
+
+## A repo that isn't a data project
+
+A web app, a static site or a service doesn't use copier. The data skeleton
+(`data/DATA.md`, `DATA_ISSUES`, `ASSUMPTIONS`, the audit ledger, the brief, the
+fit table) is most of what copier writes, so a project would delete it, and
+every `copier update` would bring it back as conflicts. A partial
+`.copier-answers.yml` is worse: `template_drift.py` would report every template
+file not excluded, which is nearly all of them, and the notice gets skimmed.
+
+Instead, copy the pieces that fit by hand and treat them as forks:
+
+1. Take what fits. The usual set is the `handoff` skill, `scripts/handoff_gap.py`
+   with only its two hooks in `.claude/settings.json`, and later
+   `.githooks/pre-push`, `docs/DECISIONS.md` + `scripts/check_decisions_log.py`
+   and a `tests.yml` of the project's own. Leave out `template_drift.py` (it
+   needs the answers file and says nothing without it).
+2. Edit what assumes this template's layout: `SUBSTANTIVE` in
+   `handoff_gap.py` (the paths that count as work), and `master` in
+   `handoff_gap.py`, `.githooks/pre-push` and `tests.yml` if the trunk is
+   `main`. Each fails silent when wrong, so a check that looks healthy is
+   checking nothing.
+3. Record the template commit copied from, so a later session can diff
+   against it.
+4. A fix that would help every project goes back as a message to the
+   `template` session; the owner decides whether it is upstreamed.
+
+Done this way 2026-10-30: `landing_page` (b80ec62, from `31bd28d`) and
+`regenx_app_refactor` (Nitrolytics PR #3).

@@ -104,7 +104,7 @@ def parse_rows(md: str) -> list[Row]:
 
 def known_tests(root: Path) -> set[str]:
     names: set[str] = set()
-    for p in (root / "tests").glob("test_*.py"):
+    for p in (root / "tests").rglob("test_*.py"):
         names.add(p.name)
         names.update(re.findall(r"^\s*def (test_[a-z0-9_]+)", p.read_text(errors="ignore"), re.M))
     names.update(p.name for p in (root / "tools" / "profiling").glob("verify-*.js"))
