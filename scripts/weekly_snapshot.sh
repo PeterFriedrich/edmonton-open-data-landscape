@@ -29,6 +29,10 @@ else
 fi
 
 git -C "$PRIVATE" pull -q --ff-only
+# The warm step below runs master's src/search.py here; point it at the main clone's
+# snapshots and search cache, which the MCP service reads (same symlinks as its worktree).
+ln -sfn "$PRIVATE" "$WT/data/raw/private-snapshots"
+ln -sfn "$REPO/data/processed/search" "$WT/data/processed/search"
 
 DATE="$(date -u +%F)"
 cd "$WT"
@@ -42,5 +46,11 @@ git -C "$PRIVATE" push -q origin HEAD
 git -C "$WT" add "data/snapshots/$DATE"
 git -C "$WT" commit -q -m "Weekly reduced snapshot $DATE"
 git -C "$WT" push -q origin HEAD:master
+
+# Embed the new snapshot here, not in the MCP service: it never embeds inside a request
+# (src/mcp_server.py) and serves the previous snapshot until this has run. ~3.5 min, <1 GB.
+# After the pushes, so a failure here still leaves the snapshot saved (and still opens an issue).
+"$PY" -m src.search --source edmonton --include-hidden warm > /dev/null
+echo "$(date -u +%FT%TZ) search cache warmed: edmonton $DATE"
 
 echo "$(date -u +%FT%TZ) weekly snapshot done: $DATE"

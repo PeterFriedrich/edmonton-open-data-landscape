@@ -33,8 +33,9 @@ class FakeModel:
     def __init__(self, *a, **kw):
         pass
 
-    def embed(self, texts):
+    def embed(self, texts, batch_size=256):
         FakeModel.calls.append(len(texts))
+        FakeModel.batch_size = batch_size
         return [np.array([1.0, (hash(t) % 7) + 1.0]) for t in texts]
 
     def query_embed(self, qs):
@@ -106,3 +107,9 @@ def test_unharvested_source_is_reported_not_silently_missing(monkeypatch, tmp_pa
 def test_empty_source_list_is_an_error():
     with pytest.raises(SystemExit):
         search.parse_sources(" , ")
+
+
+def test_embedding_uses_the_small_batch(monkeypatch, tmp_path, capsys):
+    """fastembed's default batch (256) peaked at 10.2 GB on a cold Edmonton embed (2026-11-20)."""
+    run(monkeypatch, tmp_path, capsys)
+    assert FakeModel.batch_size == search.EMBED_BATCH <= 32

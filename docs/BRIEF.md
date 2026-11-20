@@ -53,6 +53,7 @@ Maps the structure of Alberta's open data catalogues as a whole — Edmonton (da
 - **2026-11-20** — **Same-programme siblings leave the neighbour list entirely, and the panel's structure section lists them ranked by similarity.** … Rejected: removal by programme (a judgement for each of the 11 families and every new one); removal with no ranking (loses the Census matches).
 - **2026-11-20** — **Until programme units' pairs are redrawn, the gate counts "at most 3 units with no good neighbour" over the 17 units outside programmes, and a unit with no neighbours at all from a signal is … Rejected: gating on all 20 now (the 3 programme units' sibling-filled lists would count against the limit).
 - **2026-11-20** — **Spot-check outcome under the 2026-11-20 rule: embeddings stay the text signal, and schema similarity's neighbour list is not shown.**
+- **2026-11-20** — **The search's MCP service never embeds inside a request: it serves the newest snapshot whose vectors are cached, marks a colder newer one under `cache_cold` (or skips the source with the warm … Rejected: only warming in cron (any other harvest, or a failed warm, would put the embed back inside a request); only replying "cache cold" (search would go blank for a source between a harvest and …
 
 ## Open work
 

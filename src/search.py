@@ -33,6 +33,9 @@ from src.records import SOURCES, build_records, load_raw, search_text, snapshot_
 ROOT = Path(__file__).resolve().parents[1]
 CACHE = ROOT / "data/processed/search"
 MODEL = "BAAI/bge-small-en-v1.5"
+# fastembed's default batch of 256 peaked at 10.2 GB RSS on a cold Edmonton embed; 16 peaked
+# at 0.89 GB in the same 3m20s (2026-11-20). The box hung on the former.
+EMBED_BATCH = 16
 JSON_DESCRIPTION_CHARS = 300
 
 
@@ -52,10 +55,15 @@ def text_hash(t):
     return hashlib.sha256(t.encode("utf-8")).hexdigest()
 
 
+class ColdCache(Exception):
+    """Some texts have no cached vector and embedding was not allowed."""
+
+
 def embed_cached(texts, source, snap_name, embed):
     """Vectors for `texts`, reusing any this source's earlier caches hold for the
-    same text. `embed` maps a list of texts to an (n, d) array. Only the newest
-    readable cache made with MODEL is used: it holds what changed since older ones."""
+    same text. `embed` maps a list of texts to an (n, d) array; None raises ColdCache
+    instead of embedding. Only the newest readable cache made with MODEL is used: it
+    holds what changed since older ones."""
     hashes = [text_hash(t) for t in texts]
     out = CACHE / source / snap_name
     known = {}
@@ -68,6 +76,8 @@ def embed_cached(texts, source, snap_name, embed):
             known = dict(zip(meta["hashes"], V))
             break
     todo = [i for i, h in enumerate(hashes) if h not in known]
+    if todo and embed is None:
+        raise ColdCache(f"{len(todo)} of {len(texts)} {source} records from {snap_name} have no cached vector")
     if todo:
         print(f"embedding {len(todo)} of {len(texts)} {source} records from {snap_name}...", file=sys.stderr)
         V = np.asarray(embed([texts[i] for i in todo]), dtype=np.float32)
@@ -117,14 +127,16 @@ def load_model():
     return TextEmbedding(MODEL, cache_dir=str(Path.home() / ".cache/fastembed"))
 
 
-def build_index(name, snap, model, include_hidden):
-    """(meta, index) for one source's snapshot; index is None when it has no records."""
+def build_index(name, snap, model, include_hidden, embed=True):
+    """(meta, index) for one source's snapshot; index is None when it has no records.
+    embed=False raises ColdCache rather than embed uncached records."""
     records, dropped = build_records(load_raw(snap), name)
     records, n_hidden = split_hidden(records, SOURCES[name]["hidden"], include_hidden)
     texts = [search_text(r) for r in records]
     index = None
     if texts:
-        E = embed_cached(texts, name, snap.name, lambda ts: list(model.embed(ts)))
+        E = embed_cached(texts, name, snap.name,
+                         (lambda ts: list(model.embed(ts, batch_size=EMBED_BATCH))) if embed else None)
         tfidf = TfidfVectorizer(stop_words="english", sublinear_tf=True)
         index = (records, E, tfidf, tfidf.fit_transform(texts))
     meta = {"snapshot": snap.name, "n_records": len(records), "n_hidden": n_hidden,

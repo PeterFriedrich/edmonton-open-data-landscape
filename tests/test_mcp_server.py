@@ -2,6 +2,7 @@
 client. The model is the fake from `test_search.py`, so no real model is needed."""
 import asyncio
 import json
+import shutil
 import socket
 import subprocess
 import sys
@@ -38,7 +39,13 @@ def catalogue(monkeypatch, tmp_path):
              "calgary": {"2026-11-17": []}}
     monkeypatch.setattr(search, "snapshot_dirs", lambda s: [tmp_path / s / d for d in sorted(snaps[s])])
     monkeypatch.setattr(search, "load_raw", lambda snap: snaps[snap.parent.name][snap.name])
+    warm("alberta")
     return snaps
+
+
+def warm(source):
+    """What weekly_snapshot.sh does after a harvest: the CLI embeds, the server only reads."""
+    assert search.main(mcp_server.WARM.format(source).split()[3:]) == 0
 
 
 def call(args):
@@ -59,16 +66,51 @@ def test_tool_returns_the_same_object_as_cli_json(catalogue, capsys):
 
 
 def test_model_loads_once_and_a_newer_snapshot_is_picked_up_without_restart(catalogue):
+    CountingModel.loads = 0
     call({"queries": ["water"], "sources": "alberta"})
-    call({"queries": ["water"], "sources": "alberta"})
+    call({"queries": ["water"], "sources": "alberta", "include_hidden": True})  # the warm step covers both views
     assert CountingModel.loads == 1
-    assert FakeModel.calls == [6]  # second call reused the loaded index; nothing re-embedded
+    assert FakeModel.calls == [10]  # only the warm step embedded
 
     catalogue["alberta"]["2026-11-24"] = [pkg(i, "Health") for i in range(12)]
+    warm("alberta")
+    CountingModel.loads = 0
     _, text = call({"queries": ["water"], "sources": "alberta"})
     out = json.loads(text)["sources"]["alberta"]
-    assert (out["snapshot"], out["n_records"]) == ("2026-11-24", 12)
-    assert CountingModel.loads == 1
+    assert (out["snapshot"], out["n_records"], "cache_cold" in out) == ("2026-11-24", 12, False)
+    assert CountingModel.loads == 0
+
+
+def test_a_cold_snapshot_is_never_embedded_inside_a_request(catalogue):
+    """2026-11-20: an in-request embed of a new snapshot hung the box. The server must serve
+    the newest warm snapshot and say so, then pick up the new one once the CLI warms it."""
+    call({"queries": ["water"], "sources": "alberta"})
+    catalogue["alberta"]["2026-11-24"] = [pkg(i, "Health") for i in range(12)]
+    FakeModel.calls = []
+    for _ in range(2):
+        err, text = call({"queries": ["water"], "sources": "alberta"})
+        out = json.loads(text)["sources"]["alberta"]
+        assert not err and out["snapshot"] == "2026-11-17"
+        assert out["cache_cold"]["newest_snapshot"] == "2026-11-24"
+        assert "12 alberta records from 2026-11-24" in out["cache_cold"]["reason"]
+        assert out["cache_cold"]["warm_with"] == mcp_server.WARM.format("alberta")
+    assert FakeModel.calls == []
+
+    warm("alberta")
+    out = json.loads(call({"queries": ["water"], "sources": "alberta"})[1])["sources"]["alberta"]
+    assert out["snapshot"] == "2026-11-24" and "cache_cold" not in out
+
+
+def test_a_source_with_no_warm_snapshot_is_skipped_with_the_warm_command(catalogue, tmp_path):
+    for d in (tmp_path / "cache").iterdir():
+        shutil.rmtree(d)
+    FakeModel.calls = []
+    err, text = call({"queries": ["water"], "sources": "alberta"})
+    out = json.loads(text)
+    assert not err and out["queries"][0]["hits"]["alberta"] == []
+    assert out["sources"]["alberta"]["skipped"].startswith("cache cold: 6 of 6 alberta records")
+    assert mcp_server.WARM.format("alberta") in out["sources"]["alberta"]["skipped"]
+    assert FakeModel.calls == []
 
 
 def test_bad_arguments_are_tool_errors_and_the_server_keeps_serving(catalogue):

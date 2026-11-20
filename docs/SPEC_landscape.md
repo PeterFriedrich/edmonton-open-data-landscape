@@ -238,6 +238,17 @@ the 119 series counted once.
   fixed to loopback), stateless, so one long-running process (a `server`-owned
   systemd unit) serves every session on this box instead of one process each.
   stdio stays the default and is still the laptop's path over ssh.
+  *No embedding inside a request (`server`'s request after the 2026-11-20 hang):*
+  the first search on that day's new snapshot embedded it inside the HTTP
+  service; memory went from 6.8 to 16 GB and stayed there, and with other jobs
+  the box ran out of memory and was rebooted. The service now runs under a 1 GB
+  cap and never embeds. If the newest snapshot's vectors aren't cached it serves
+  the newest snapshot that is, and names the cold one and the warm command under
+  `cache_cold`; with no warm snapshot the source is `skipped` with that command.
+  `scripts/weekly_snapshot.sh` warms Edmonton after each harvest; a manual
+  harvest of another source runs the same command. Embedding runs in batches of
+  16: fastembed's default of 256 peaked at 10.2 GB RSS on a cold Edmonton embed,
+  16 at 0.89 GB, in the same 3m20s, with vectors matching to 6e-4.
 
 Notebooks first; a shareable static site later. Keep outputs as data files so a
 site can read them.
