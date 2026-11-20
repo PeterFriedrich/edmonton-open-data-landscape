@@ -4,11 +4,12 @@
 neighbours, de-duplicated into pairs. `extend` adds a later signal's top-k for the
 same units: ranks go onto existing pairs, new neighbours become new pairs with new
 ids, so existing labels stay valid. `score` reads the owner's labels and reports
-precision per signal (spec, Outputs).
+precision per signal, per stratum and inside/outside programmes, with the gate
+(spec, Outputs; DECISIONS 2026-11-20).
 
     python -m src.spotcheck sample SIMILARITY_DIR [--k 5] [--seed 0] [--out DIR]
     python -m src.spotcheck extend PAIRS_CSV SIMILARITY_DIR [--signal embed] [--k 5]
-    python -m src.spotcheck score PAIRS_CSV LABELS_CSV
+    python -m src.spotcheck score PAIRS_CSV LABELS_CSV --programmes ASSIGNMENTS_CSV
 
 Pairs carry titles, ids and scores only (no descriptions), so they can be committed.
 """
@@ -34,6 +35,12 @@ PAIR_FIELDS = ["pair_id", "stratum", "unit", "unit_name", "unit_id", "unit_categ
                "embed_rank", "embed_score"]
 SIGNALS = ("text", "schema", "embed")
 VERDICTS = {"yes", "no", "unsure"}
+# The 2026-11-20 spot-check decision rule (docs/DECISIONS.md): a signal's neighbour list
+# is shown only if precision (unsure = miss) is at least this and at most this many units
+# have no good neighbour in their top k. Provisional; a change after the tally is read
+# needs its own DECISIONS row.
+GATE_MIN_PRECISION = 0.70
+GATE_MAX_UNITS_NO_GOOD = 3
 
 
 def pick_units(units, seed):
@@ -114,9 +121,49 @@ def extend(pairs, units, neighbours, signal, k=5):
     return pairs + new
 
 
-def score(pairs, labels):
-    """Precision of each signal's top-k: share of labelled neighbours judged related.
-    `unsure` and unlabelled pairs are counted, not scored."""
+def _signal_block(signal, pairs, verdict):
+    """One signal's figures over `pairs` (all pairs of one scope). Unsure counts as a
+    miss in `precision` and is dropped in `precision_unsure_dropped` (DECISIONS 2026-11-20)."""
+    units = {p["unit"] for p in pairs}
+    by_unit = collections.defaultdict(list)
+    for p in pairs:
+        if p.get(f"{signal}_rank", "") != "":
+            by_unit[p["unit"]].append(verdict.get(p["pair_id"]))
+    v = [x for xs in by_unit.values() for x in xs]
+    yes, no, unsure = v.count("yes"), v.count("no"), v.count("unsure")
+    labelled = yes + no + unsure
+    seen = {u: [x for x in xs if x] for u, xs in by_unit.items()}
+    # "No good neighbour" needs every pair judged: an unlabelled pair could still be a yes.
+    done = [xs for xs in by_unit.values() if all(xs)]
+    return {
+        "neighbours": len(v), "labelled": labelled, "unlabelled": len(v) - labelled,
+        "yes": yes, "no": no, "unsure": unsure,
+        "precision": round(yes / labelled, 3) if labelled else None,
+        "precision_unsure_dropped": round(yes / (yes + no), 3) if yes + no else None,
+        "units": len(units),
+        "units_with_no_neighbours": len(units - set(by_unit)),
+        "units_unlabelled": sum(1 for xs in seen.values() if not xs),
+        "units_partly_labelled": sum(1 for u, xs in seen.items() if xs and len(xs) < len(by_unit[u])),
+        "units_with_no_good_neighbour": sum(1 for xs in done if "yes" not in xs),
+        "units_all_unsure": sum(1 for xs in done if set(xs) == {"unsure"}),
+    }
+
+
+def _gate(b):
+    if not b["neighbours"]:
+        return {"status": "no_pairs"}
+    if b["unlabelled"]:
+        return {"status": "incomplete", "unlabelled": b["unlabelled"]}
+    ok = (b["labelled"] and b["yes"] / b["labelled"] >= GATE_MIN_PRECISION
+          and b["units_with_no_good_neighbour"] <= GATE_MAX_UNITS_NO_GOOD)
+    return {"status": "pass" if ok else "fail"}
+
+
+def score(pairs, labels, programmes):
+    """Precision of each signal's top-k, pooled, per scope and per stratum, and the
+    2026-11-20 gate on units outside programmes. `programmes` maps unit -> programme_key
+    ("" when the unit is in none). Programme units' gate waits for their pairs to be
+    redrawn after sibling removal (DECISIONS 2026-11-20)."""
     verdict = {}
     for r in labels:
         if r["verdict"] not in VERDICTS:
@@ -125,21 +172,28 @@ def score(pairs, labels):
     unknown = set(verdict) - {p["pair_id"] for p in pairs}
     if unknown:
         raise ValueError(f"labels for pairs not in the sample: {sorted(unknown)[:5]}")
-    out = {"pairs": len(pairs), "labelled": len(verdict),
-           "unsure": sum(v == "unsure" for v in verdict.values()), "signals": {}}
-    for signal in (s for s in SIGNALS if any(f"{s}_rank" in p for p in pairs)):
-        mine = [p for p in pairs if p.get(f"{signal}_rank", "") != ""]
-        judged = [verdict[p["pair_id"]] for p in mine if verdict.get(p["pair_id"]) in ("yes", "no")]
-        per_unit = collections.defaultdict(list)
-        for p in mine:
-            if verdict.get(p["pair_id"]) in ("yes", "no"):
-                per_unit[p["unit"]].append(verdict[p["pair_id"]] == "yes")
-        out["signals"][signal] = {
-            "neighbours": len(mine), "judged": len(judged),
-            "precision": round(judged.count("yes") / len(judged), 3) if judged else None,
-            "units_with_no_good_neighbour": sum(1 for v in per_unit.values() if not any(v)),
-        }
-    return out
+    missing = {p["unit"] for p in pairs} - set(programmes)
+    if missing:
+        raise ValueError(f"units not in the programme assignments: {sorted(missing)[:5]}")
+    signals = [s for s in SIGNALS if any(f"{s}_rank" in p for p in pairs)]
+    blocks = lambda ps: {s: _signal_block(s, ps, verdict) for s in signals}
+    outside = blocks([p for p in pairs if not programmes[p["unit"]]])
+    inside = blocks([p for p in pairs if programmes[p["unit"]]])
+    for b in outside.values():
+        b["gate"] = _gate(b)
+    for b in inside.values():
+        b["gate"] = {"status": "pending_redraw"}
+    strata = collections.defaultdict(list)
+    for p in pairs:
+        strata["category" if p["stratum"].startswith("category:") else p["stratum"]].append(p)
+    return {
+        "pairs": len(pairs), "labelled": len(verdict),
+        "unsure": sum(v == "unsure" for v in verdict.values()),
+        "gate": {"min_precision": GATE_MIN_PRECISION, "max_units_no_good": GATE_MAX_UNITS_NO_GOOD,
+                 "scope": "outside_programmes"},
+        "signals": blocks(pairs), "outside_programmes": outside, "in_programmes": inside,
+        "by_stratum": {k: blocks(v) for k, v in strata.items()},
+    }
 
 
 def main(argv=None):
@@ -158,6 +212,8 @@ def main(argv=None):
     c = sub.add_parser("score")
     c.add_argument("pairs_csv")
     c.add_argument("labels_csv")
+    c.add_argument("--programmes", required=True,
+                   help="assignments.csv from src.programmes for the same snapshot")
     args = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
@@ -186,7 +242,8 @@ def main(argv=None):
         log.info("spotcheck extend path=%s signal=%s new_pairs=%d total=%d",
                  args.pairs_csv, args.signal, len(pairs) - n, len(pairs))
     else:
-        print(json.dumps(score(read(args.pairs_csv), read(args.labels_csv)), indent=2))
+        programmes = {r["unit"]: r["programme_key"] for r in read(args.programmes)}
+        print(json.dumps(score(read(args.pairs_csv), read(args.labels_csv), programmes), indent=2))
     return 0
 
 
