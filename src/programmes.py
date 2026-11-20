@@ -43,6 +43,11 @@ NEAR = 2
 MIN_SUFFIX_WORDS = 2
 # One or two shared columns ("name", "area id") don't make a template.
 MIN_COLUMNS = 3
+# Title endings the publisher wrote another way for one programme. Each was checked by
+# hand: description links to an edmontoninsightcommunity.ca survey and the panel's
+# profiling-questionnaire columns (data/DATA.md). Aliased units are listed in the summary.
+SUFFIX_ALIASES = {"insight community": "edmonton insight community",
+                  "edmonton insight survey": "edmonton insight community"}
 PRIORITY = {"suffix": 0, "purpose": 1, "columns": 2}
 TAG_SHARE = 0.8
 ASSIGNMENT_FIELDS = ["unit", "name", "programme_key", "evidence", "also_in"]
@@ -77,10 +82,14 @@ def detect(raw, inventory):
     by_id = {a["resource"]["id"]: a for a in raw}
     units = build_units(raw, inventory)
     groups = {kind: collections.defaultdict(list) for kind in MIN_UNITS}
+    aliased = []
     for u in units:
         # Suffix and Purpose both look at every series member, as the schema signal does.
         members = u["member_ids"].split(";")
-        for sfx in {title_suffix(by_id[i]["resource"]["name"]) for i in members} - {""}:
+        raw_sfx = {title_suffix(by_id[i]["resource"]["name"]) for i in members} - {""}
+        aliased += [{"unit": u["unit"], "suffix": s, "as": SUFFIX_ALIASES[s]}
+                    for s in sorted(raw_sfx) if s in SUFFIX_ALIASES]
+        for sfx in {SUFFIX_ALIASES.get(s, s) for s in raw_sfx}:
             groups["suffix"][sfx].append(u)
         for p in purposes(members, by_id):
             groups["purpose"][p].append(u)
@@ -136,6 +145,7 @@ def detect(raw, inventory):
         "n_without_programme": sum(1 for a in assignments if not a["programme_key"]),
         "n_in_several": sum(1 for a in assignments if a["also_in"]),
         "min_units": MIN_UNITS,
+        "aliased_suffixes": aliased,
         "families_by_evidence": dict(collections.Counter(f["evidence"] for f in families)),
         "overlaps": [{"a": a, "b": b, "shared_units": n} for (a, b), n in overlaps.most_common()],
         "near_threshold": sorted(near, key=lambda r: (r["evidence"], -r["n_units"], r["key"])),

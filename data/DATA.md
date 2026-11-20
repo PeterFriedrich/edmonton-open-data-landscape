@@ -156,6 +156,14 @@ unless noted:
   (visually) the areas…" texts are separate families sharing 4 units. 83 of the 84
   monthly-survey units are also "- Edmonton Insight Community" units. A series's
   members can carry different Purpose texts (20 units).
+  **Insight Community title variants:** three surveys end "- Insight Community"
+  (f7ax-babe, pwej-zwwc) or "- Edmonton Insight Survey" (gdrb-rdf9), not
+  "- Edmonton Insight Community". All three describe themselves as one topic of an
+  Insight Community Mixed Topic survey, link to edmontoninsightcommunity.ca and carry
+  the panel's 15–16 profiling-questionnaire columns, so `SUFFIX_ALIASES` in
+  `src/programmes.py` maps both endings to the family (2026-11-20; 407 → 410 units).
+  Not merged: the 7 "Measuring Progress Questionnaire - …" units, which share a title
+  start that detection doesn't look at; whether they are Insight surveys is unchecked.
 
 **Licence (per asset):** on Discovery page 0, `metadata.license` was
 **"See Terms of Use"** for 88 assets, **"Canada Open Government Licence"** for 5,
