@@ -41,6 +41,17 @@ def test_shared_title_suffix_forms_one_family():
         [("suffix", 5, "insight community")]
 
 
+def test_an_aliased_title_ending_joins_its_programme_and_is_listed():
+    assets = survey_panel() + [asset("a1", "Spray Parks - Insight Community", fields=("p",)),
+                               asset("a2", "Household Travel - Edmonton Insight Survey", fields=("t",))]
+    assignments, families, summary = run(assets)
+    keys = {a["unit"]: a["programme_key"] for a in assignments}
+    assert keys["a1"] == keys["a2"] == "suffix:edmonton insight community"
+    assert [f["n_units"] for f in families] == [7]
+    assert [(r["unit"], r["suffix"]) for r in summary["aliased_suffixes"]] == \
+        [("a1", "insight community"), ("a2", "edmonton insight survey")]
+
+
 def test_group_under_the_threshold_is_reported_not_a_family():
     assets = [asset(f"p{i}", f"Report {i}", fields=(f"c{i}",), purpose="To promote transparency")
               for i in range(prog.MIN_UNITS["purpose"] - 1)]
