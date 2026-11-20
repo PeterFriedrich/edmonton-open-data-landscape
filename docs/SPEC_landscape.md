@@ -227,9 +227,12 @@ the 119 series counted once.
   indexes load on the first call and stay loaded; each call picks up a newer
   snapshot. Its default `k` is 5, not 12: at 12 a query is about 10k tokens,
   Claude Code's warning level for tool output. From the owner's laptop the
-  registered command is this one run over ssh, so no port is opened. Rejected:
-  a shared HTTP service (a port, a service unit and auth, for one or two
-  searching sessions).
+  registered command is this one run over ssh, so no port is opened.
+  *Shared HTTP mode (owner via `server`, 2026-11-20):* `--transport http` serves
+  the same tool at `http://127.0.0.1:8765/mcp` (`--port` to change; the host is
+  fixed to loopback), stateless, so one long-running process (a `server`-owned
+  systemd unit) serves every session on this box instead of one process each.
+  stdio stays the default and is still the laptop's path over ssh.
 
 Notebooks first; a shareable static site later. Keep outputs as data files so a
 site can read them.

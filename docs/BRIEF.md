@@ -24,6 +24,7 @@ Maps the structure of Alberta's open data catalogues as a whole — Edmonton (da
 - scipy==1.18.1
 - scikit-learn==1.9.1
 - mcp==2.3.0
+- uvicorn==0.54.0
 - fastembed==0.8.1
 - pandas==3.0.6
 - matplotlib==3.11.2
@@ -46,6 +47,7 @@ Maps the structure of Alberta's open data catalogues as a whole — Edmonton (da
 - **2026-11-16** — **Scope widens from Edmonton's catalogue to Alberta's open-data catalogues (data.edmonton.ca, data.calgary.ca, open.alberta.ca; StatCan WDS later), and the repo is to be renamed … Rejected: a separate `open-data-search` repo (the search and the what's-missing question both need the catalogues side by side); growing it here under the Edmonton name.
 - **2026-11-17** — **Multi-source search (M6) ranks each source on its own and prints a top `k` per source; `--source` defaults to every harvested source; the shared record is the spec's ten fields plus `category` and … Rejected: one merged ranking (the provincial catalogue, 1,682 visible records against 920 Edmonton units, can crowd Edmonton out, and a shared TF-IDF fit would change Edmonton's rankings); a …
 - **2026-11-19** — **The search's MCP server is stdio, with one tool (`search_datasets`) that returns the `--json` object, a default `k` of 5, and the model loaded once per server process.** … Rejected: a shared localhost HTTP service (a port, a service unit and auth to reach it from the laptop, for one or two searching sessions); a hand-written stdlib JSON-RPC server (the official `mcp` …
+- **2026-11-20** — **The search's MCP server also runs as one shared HTTP service on this box: `--transport http` serves `http://127.0.0.1:8765/mcp`, stateless, bound to loopback with no host option; stdio stays the …
 
 ## Open work
 
