@@ -6,10 +6,12 @@ instead of reloading on every command-line run.
 
 One tool, `search_datasets`, returning the same object as `python -m src.search --json`.
 The model and each source's index load on the first call that needs them; every call
-checks for a newer snapshot and rebuilds only that source. A source whose vectors are
-not cached yet is embedded inside that first call (minutes for a new snapshot with many
-changed records; 13m43s for all three from empty), so run the CLI once after a harvest to
-warm the cache. Registering the server with
+checks for a newer snapshot and rebuilds only that source. The server never embeds
+records: an in-request embed of a new snapshot took the box to 23 of 24 GB and hung it
+(2026-11-20), and the service now runs under a 1 GB cap. If the newest snapshot's vectors
+are not cached, it serves the newest snapshot that is and says so under `cache_cold`; if
+none is, the source is skipped with the command that warms it (`WARM`, which
+`scripts/weekly_snapshot.sh` runs after each harvest). Registering the server with
 Claude Code is the `server` session's call; from another machine, run the stdio command
 over ssh (no open port, no tunnel).
 
@@ -42,18 +44,33 @@ server = MCPServer(
 _lock = threading.Lock()
 _model = None
 _indexes = {}  # (source, include_hidden) -> (snapshot name, meta, index)
+WARM = ".venv/bin/python -m src.search --source {} --include-hidden warm"  # --include-hidden caches both views
 
 
 def _index(name, include_hidden):
-    snaps = search.snapshot_dirs(name)[-1:]
+    """Newest snapshot whose vectors are all cached; never embeds (module docstring)."""
+    snaps = search.snapshot_dirs(name)
     if not snaps:
         return {"skipped": "no snapshot harvested"}, None
     cached = _indexes.get((name, include_hidden))
-    if cached and cached[0] == snaps[0].name:
+    if cached and cached[0] == snaps[-1].name:
         return cached[1], cached[2]
-    meta, index = search.build_index(name, snaps[0], _model, include_hidden)
-    _indexes[(name, include_hidden)] = (snaps[0].name, meta, index)
-    return meta, index
+    cold = []
+    for snap in reversed(snaps):
+        if cached and cached[0] == snap.name:
+            meta, index = cached[1], cached[2]
+        else:
+            try:
+                meta, index = search.build_index(name, snap, _model, include_hidden, embed=False)
+            except search.ColdCache as e:
+                cold.append(str(e))
+                continue
+        if cold:
+            meta = {**meta, "cache_cold": {"newest_snapshot": snaps[-1].name, "reason": cold[0],
+                                           "warm_with": WARM.format(name)}}
+        _indexes[(name, include_hidden)] = (snap.name, meta, index)
+        return meta, index
+    return {"skipped": f"cache cold: {cold[0]}; warm it with `{WARM.format(name)}`"}, None
 
 
 @server.tool()
