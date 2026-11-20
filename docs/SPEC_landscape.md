@@ -196,7 +196,12 @@ the 119 series counted once.
 - **Neighbours:** closest relatives of any dataset — a lookup into the
   landscape, not a replacement for the City's tools. Success check: a
   hand-labelled sample of ~20 datasets with their expected neighbours,
-  scored before any neighbour output is shown.
+  scored before any neighbour output is shown. **Scored 2026-11-20** (210 pairs, 17 units
+  outside programmes, unsure = miss): embeddings 91.8%, TF-IDF 85.9%, schema
+  63.0%. Embeddings stay the text signal; schema similarity's neighbour list
+  is not shown (gate: 70%). Join partners are separate and still rest on value
+  overlap. Provisional on the expected-neighbour probe and the programme
+  units' redraw (`docs/DECISIONS.md`).
 - **Change log:** added / removed / updated between snapshots.
 - **Search (agent-facing, 2026-11-16):** free-text search across all sources,
   ranked by embedding plus TF-IDF similarity, for Claude sessions in other
