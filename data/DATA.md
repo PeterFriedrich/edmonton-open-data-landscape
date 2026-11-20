@@ -243,3 +243,9 @@ read live yet.
 - **Committed on purpose**, unlike `data/processed/`: next week's layout starts from it, so losing it reshuffles the map. It holds unit ids and numbers only, never description text.
 - `<date>` is the similarity snapshot's date. Units come from `data/processed/similarity/<date>/units.csv`, and coordinates are in arbitrary t-SNE units (only nearness means anything).
 - 2026-10-02 is the first anchor (epoch 1, seed 0, 920 units).
+
+### `data/spotcheck/<date>_labels.csv` (owner's spot-check labels)
+- `pair_id, verdict, at, updated_at, version`; one row per labelled pair in `<date>_pairs.csv`, sorted by `pair_id`. `verdict` is `yes` / `no` / `unsure`.
+- **A snapshot of the labelling page's `labels` collection** (artifact `Ts8cWLqtyQCGJMkkm4SYaA`), which is the live copy. Python can't reach it: a session reads the collection with ArtifactData and rewrites this file after each labelling sitting. It also serves as the backup.
+- `at` is the page's clock when the verdict was set; `updated_at` and `version` are the database's. `version` > 1 means the verdict was changed after it was first set. `at` separates labels made before and after the 2026-10-16 rule, the 2026-11-03 programme tag and the 2026-11-20 blind page. Four relabels a session wrote at the owner's request (p001, p005, p008, p198) carry the round `at` `2026-10-16T04:30:00.000Z`.
+- 2026-11-20 snapshot: 70 labels (48 yes, 12 no, 10 unsure); 50 from 2026-10-02, 15 from 2026-10-16, 5 from 2026-11-20.
