@@ -44,6 +44,6 @@ by header name, and any table with a `Status` column is part of the index.
 
 | ID | Assumption | Status | If wrong (rough size) | Evidence and test |
 |----|------------|--------|-----------------------|-------------------|
-| A1 | Spot-check: leaving "unsure" verdicts unscored favours no signal over another | UNVERIFIED (the labels so far point against it) | Larger than the gap between signals it is used to judge | `docs/FINDINGS_spotcheck_2026-11-13.md`, L3 |
+| A1 | Spot-check: leaving "unsure" verdicts unscored favours no signal over another | UNVERIFIED (no longer relied on: since 2026-11-20 `score` counts unsure as a miss, `test_unsure_is_a_miss_in_the_headline_and_dropped_in_the_second_bound`; the full labels show unsure falling unevenly, so the premise looks false) | Larger than the gap between signals it is used to judge | `docs/FINDINGS_spotcheck_2026-11-13.md`, L3 |
 | A2 | Spot-check: a pooled precision over the 20 sampled units stands for the catalogue, although units in a detected programme are sampled well below their share | UNVERIFIED | Large for programme units (close to half the catalogue); unknown for the pooled figure | `docs/FINDINGS_spotcheck_2026-11-13.md`, L1 and L2 |
 | A3 | Spot-check: the one labeller's verdicts are repeatable, and seeing each pair's signal and the running tally doesn't shift them | UNVERIFIED | Unknown; no pair has been labelled twice | `docs/FINDINGS_spotcheck_2026-11-13.md`, L3 |
