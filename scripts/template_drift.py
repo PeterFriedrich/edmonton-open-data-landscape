@@ -47,7 +47,7 @@ MAX_LISTED = 12
 # project's), and each plain file shadowed by a `.jinja` sibling.
 # tests/test_copier.py pins the match.
 IGNORED = [
-    "copier.yml", "tests/test_copier.py",
+    "copier.yml", "tests/test_copier.py", "tests/test_guard_inputs.py",
     "session-summary/*.md", "docs/FINDINGS_*.md", "docs/BRIEF.md",
     "README.md", "docs/SCOPE.md", "data/DATA.md", "docs/ASSUMPTIONS.md",
     "TODO.md", "docs/DECISIONS.md", "docs/TODO_archive.md", "docs/AUDIT_LEDGER.md",
