@@ -10,6 +10,12 @@ writes `data/processed/similarity/<date>/`:
 - `summary.json`   counts, category agreement vs chance, agreement between signals
 
     python -m src.similarity RAW_SNAPSHOT_DIR [--inventory CSV] [--out DIR] [--k 10]
+                             [--text-variant base|purpose|coldesc|both]
+
+A text variant other than `base` appends the publisher's Purpose text and/or column
+descriptions to the unit text, keeping only texts used by at most RARE_TEXT_MAX_UNITS
+units (programme boilerplate is copied across hundreds), and writes to
+`<out>/<date>/variants/<variant>/` so the base outputs are untouched.
 """
 import argparse
 import csv
@@ -59,6 +65,53 @@ def schema_fields(field_names, datatypes):
 def clean_text(s):
     s = re.sub(r"<[^>]+>|https?://\S+", " ", s or "")
     return re.sub(r"\s+", " ", s).strip()
+
+
+TEXT_VARIANTS = ("base", "purpose", "coldesc", "both")
+RARE_TEXT_MAX_UNITS = 3
+PURPOSE_KEY = "General-Information_Purpose"
+
+
+def purpose_texts(asset):
+    md = asset["classification"].get("domain_metadata") or []
+    return [m["value"] for m in md if m.get("key") == PURPOSE_KEY and m.get("value")]
+
+
+def coldesc_texts(asset):
+    return [d for d in asset["resource"].get("columns_description") or [] if d]
+
+
+def rare_text_key(s):
+    return clean_text(s).lower()
+
+
+def add_rare_texts(units, raw, variant):
+    """Append each unit's Purpose / column-description texts that at most
+    RARE_TEXT_MAX_UNITS units use (counted per unit, so a series' copies count once).
+    Returns counts of texts kept and dropped, per source."""
+    by_id = {a["resource"]["id"]: a for a in raw}
+    sources = {"purpose": [purpose_texts], "coldesc": [coldesc_texts],
+               "both": [purpose_texts, coldesc_texts]}[variant]
+    per_unit = []
+    for u in units:
+        texts = {}
+        for src in sources:
+            for s in src(by_id[u["representative_id"]]):
+                k = rare_text_key(s)
+                if k:
+                    texts.setdefault(k, clean_text(s))
+        per_unit.append(texts)
+    n_units = {}
+    for texts in per_unit:
+        for k in texts:
+            n_units[k] = n_units.get(k, 0) + 1
+    kept = {k for k, n in n_units.items() if n <= RARE_TEXT_MAX_UNITS}
+    for u, texts in zip(units, per_unit):
+        extra = [texts[k] for k in sorted(texts) if k in kept]
+        if extra:
+            u["text"] = u["text"] + " " + " ".join(extra)
+    return {"distinct_texts": len(n_units), "kept": len(kept), "dropped": len(n_units) - len(kept),
+            "units_with_added_text": sum(1 for texts in per_unit if kept & texts.keys())}
 
 
 def build_units(raw, inventory):
@@ -161,8 +214,9 @@ def signal_agreement(A, B, k=10):
             "units_with_both": len(jac)}
 
 
-def run(raw, inventory, k=10):
+def run(raw, inventory, k=10, variant="base"):
     units = build_units(raw, inventory)
+    added = add_rare_texts(units, raw, variant) if variant != "base" else None
     Xt, _ = text_matrix(units)
     Xs, idf = schema_matrix(units)
     St, Ss = cosine(Xt), cosine(Xs)
@@ -184,6 +238,7 @@ def run(raw, inventory, k=10):
 
     neighbours = top_neighbours(St, units, "text", k) + top_neighbours(Ss, units, "schema", k, idf)
     summary = {
+        **({"text_variant": variant, "rare_texts_added": added} if added is not None else {}),
         "n_units": len(units),
         "n_series_units": sum(1 for u in units if u["n_members"] > 1),
         "n_member_datasets": sum(u["n_members"] for u in units),
@@ -203,6 +258,7 @@ def main(argv=None):
     ap.add_argument("--inventory", help="default: data/processed/inventory/<snapshot date>.csv")
     ap.add_argument("--out", default=str(ROOT / "data/processed/similarity"))
     ap.add_argument("--k", type=int, default=10)
+    ap.add_argument("--text-variant", choices=TEXT_VARIANTS, default="base")
     args = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
@@ -213,8 +269,10 @@ def main(argv=None):
     with open(inv_path, newline="", encoding="utf-8") as f:
         inventory = list(csv.DictReader(f))
 
-    units, neighbours, St, Ss, summary = run(raw, inventory, args.k)
+    units, neighbours, St, Ss, summary = run(raw, inventory, args.k, args.text_variant)
     out = Path(args.out) / raw_dir.name
+    if args.text_variant != "base":
+        out = out / "variants" / args.text_variant
     out.mkdir(parents=True, exist_ok=True)
     with open(out / "units.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=UNIT_FIELDS, extrasaction="ignore")

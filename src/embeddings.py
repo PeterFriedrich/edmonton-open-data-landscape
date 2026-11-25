@@ -13,6 +13,10 @@ long descriptions count only by their opening.
 
     python -m src.embeddings RAW_SNAPSHOT_DIR [--inventory CSV] [--sim-dir DIR]
                              [--model NAME] [--cache-dir DIR] [--k 10]
+                             [--text-variant base|purpose|coldesc|both]
+
+A variant other than `base` embeds the src.similarity variant text and reads and
+writes `<sim-dir>/variants/<variant>/` (run src.similarity with the same variant first).
 """
 import argparse
 import csv
@@ -24,12 +28,14 @@ from pathlib import Path
 
 import numpy as np
 
-from src.similarity import NEIGHBOUR_FIELDS, build_units, category_agreement, signal_agreement, top_neighbours
+from src.similarity import NEIGHBOUR_FIELDS, TEXT_VARIANTS, add_rare_texts, build_units, category_agreement, signal_agreement, top_neighbours
 
 log = logging.getLogger("embeddings")
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MODEL = "BAAI/bge-small-en-v1.5"
+# fastembed's default batch (256) peaked at ~10 GB on this catalogue (2026-11-20); as src.search.
+EMBED_BATCH = 16
 
 
 def check_unit_order(units, units_csv):
@@ -74,6 +80,7 @@ def main(argv=None):
     ap.add_argument("--model", default=DEFAULT_MODEL)
     ap.add_argument("--cache-dir", default=str(Path.home() / ".cache/fastembed"))
     ap.add_argument("--k", type=int, default=10)
+    ap.add_argument("--text-variant", choices=TEXT_VARIANTS, default="base")
     args = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
@@ -82,15 +89,19 @@ def main(argv=None):
     raw_dir = Path(args.raw_dir)
     inv_path = Path(args.inventory or ROOT / f"data/processed/inventory/{raw_dir.name}.csv")
     sim_dir = Path(args.sim_dir or ROOT / f"data/processed/similarity/{raw_dir.name}")
+    if args.text_variant != "base":
+        sim_dir = sim_dir / "variants" / args.text_variant
     with gzip.open(raw_dir / "catalog.json.gz", "rt", encoding="utf-8") as f:
         raw = json.load(f)
     with open(inv_path, newline="", encoding="utf-8") as f:
         inventory = list(csv.DictReader(f))
 
     units = build_units(raw, inventory)
+    if args.text_variant != "base":
+        add_rare_texts(units, raw, args.text_variant)
     check_unit_order(units, sim_dir / "units.csv")
     model = TextEmbedding(args.model, cache_dir=args.cache_dir)
-    Se, neighbours, summary = run(units, lambda texts: list(model.embed(texts)),
+    Se, neighbours, summary = run(units, lambda texts: list(model.embed(texts, batch_size=EMBED_BATCH)),
                                   np.load(sim_dir / "text_sim.npy"), np.load(sim_dir / "schema_sim.npy"), args.k)
 
     np.save(sim_dir / "embed_sim.npy", Se)
@@ -98,7 +109,8 @@ def main(argv=None):
         w = csv.DictWriter(f, fieldnames=NEIGHBOUR_FIELDS)
         w.writeheader()
         w.writerows(neighbours)
-    summary = {"snapshot": raw_dir.name, "model": args.model, **summary}
+    summary = {"snapshot": raw_dir.name, "model": args.model,
+               **({"text_variant": args.text_variant} if args.text_variant != "base" else {}), **summary}
     (sim_dir / "embed_summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     log.info("embeddings path=%s %s", sim_dir, json.dumps(summary))
     return 0
