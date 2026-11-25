@@ -96,3 +96,56 @@ def test_neighbours_exclude_self_and_zero_scores():
     assert all(n["unit"] != n["neighbour"] and n["score"] > 0 for n in neighbours)
     bus = [n for n in neighbours if n["unit"] == "bus1" and n["signal"] == "schema"]
     assert bus[0]["neighbour"] == "bus2" and bus[0]["shared_fields"] == "route_id"
+
+
+def with_purpose(a, purpose=None, coldesc=()):
+    a["classification"]["domain_metadata"] = [{"key": sim.PURPOSE_KEY, "value": purpose}] if purpose else []
+    a["resource"]["columns_description"] = list(coldesc)
+    return a
+
+
+def rare_fixture():
+    """Six units: boilerplate Purpose on 4 (dropped), a shared Purpose on exactly 3
+    (kept, the limit), one unique Purpose, and column descriptions on one."""
+    names = ["u1", "u2", "u3", "u4", "u5", "u6"]
+    words = ["parks trees", "parks bins", "trees bins", "roads snow", "roads graffiti", "snow graffiti"]
+    raw = [asset(n, f"Dataset {n}", ["a"], description=w) for n, w in zip(names, words)]
+    for n in ["u1", "u2", "u3", "u4"]:
+        with_purpose(raw[names.index(n)], "To share monthly survey results")
+    for n in ["u5", "u6"]:
+        with_purpose(raw[names.index(n)], "Track graffiti removal")
+    # u1 also has a shared one; with u5, u6 that makes 3 units.
+    raw[0]["classification"]["domain_metadata"].append({"key": sim.PURPOSE_KEY, "value": "Track  GRAFFITI removal"})
+    with_purpose(raw[1], "To share monthly survey results", coldesc=["Count of litter bins emptied"])
+    inventory = [inv_row(n, f"Dataset {n}") for n in names]
+    return raw, inventory
+
+
+def test_rare_purpose_text_is_added_and_boilerplate_on_more_than_3_units_is_dropped():
+    raw, inventory = rare_fixture()
+    units = {u["unit"]: u for u in sim.build_units(raw, inventory)}
+    counts = sim.add_rare_texts(list(units.values()), raw, "purpose")
+    assert "removal" in units["u5"]["text"].lower()            # used on 3 units: kept
+    assert "removal" in units["u1"]["text"].lower()            # case/space-insensitive match
+    assert "monthly survey" not in units["u2"]["text"]         # used on 4 units: dropped
+    assert "litter" not in units["u2"]["text"]                 # column descriptions not in this variant
+    assert counts["kept"] == 1 and counts["dropped"] == 1
+
+
+def test_coldesc_and_both_variants_add_column_descriptions():
+    for variant, has_purpose in (("coldesc", False), ("both", True)):
+        raw, inventory = rare_fixture()
+        units = {u["unit"]: u for u in sim.build_units(raw, inventory)}
+        sim.add_rare_texts(list(units.values()), raw, variant)
+        assert "litter bins" in units["u2"]["text"]
+        assert ("removal" in units["u5"]["text"].lower()) == has_purpose
+
+
+def test_base_variant_leaves_unit_text_and_summary_unchanged():
+    raw, inventory = rare_fixture()
+    plain = [u["text"] for u in sim.build_units(raw, inventory)]
+    units, _, _, _, summary = sim.run(raw, inventory, k=3)
+    assert [u["text"] for u in units] == plain
+    assert "text_variant" not in summary and "rare_texts_added" not in summary
+    units_v, _, _, _, summary_v = sim.run(raw, inventory, k=3, variant="purpose")
+    assert summary_v["text_variant"] == "purpose" and summary_v["rare_texts_added"]["kept"] == 1
