@@ -202,6 +202,18 @@ the 119 series counted once.
   is not shown (gate: 70%). Join partners are separate and still rest on value
   overlap. Provisional on the expected-neighbour probe and the programme
   units' redraw (`docs/DECISIONS.md`).
+- **Cross-portal matches (owner, 2026-11-26):** each source's landscape (neighbours,
+  map, clusters) is computed on that source alone, so adding a source never changes
+  Edmonton's lists or invalidates its labels. Matches in the other portals are a
+  separate list per dataset ("nearest in Calgary", "nearest in open.alberta.ca"),
+  from embeddings only: an embedding depends on its own text alone, while TF-IDF and
+  schema weights are fitted on the pool. Never mixed into a dataset's own neighbours.
+  Why: in one joint pool (search text, 2026-11-17/20 snapshots) 91% of Edmonton's
+  top-5 neighbours are Edmonton datasets against 31% by chance, and the province's
+  97%; with place names stripped, Edmonton's cross-portal share rises only from 8.9%
+  to 14.3%, so a joint map would mostly be three islands. 8 of 9 same-title pairs
+  across portals (Fire Stations, Development Permits, …) already find each other.
+  Proposed, not locked: strip place names from the text for this layer only.
 - **Change log:** added / removed / updated between snapshots.
 - **Search (agent-facing, 2026-11-16):** free-text search across all sources,
   ranked by embedding plus TF-IDF similarity, for Claude sessions in other
