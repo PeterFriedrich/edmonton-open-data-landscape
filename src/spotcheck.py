@@ -11,6 +11,9 @@ precision per signal, per stratum and inside/outside programmes, with the gate
     python -m src.spotcheck extend PAIRS_CSV SIMILARITY_DIR [--signal embed] [--k 5]
     python -m src.spotcheck score PAIRS_CSV LABELS_CSV --programmes ASSIGNMENTS_CSV
 
+`probe_score` ranks the owner's expected neighbours in each method's full list (DECISIONS
+2026-11-27); its command waits for the picks.
+
 Pairs carry titles, ids and scores only (no descriptions), so they can be committed.
 """
 import argparse
@@ -41,6 +44,10 @@ VERDICTS = {"yes", "no", "unsure"}
 # needs its own DECISIONS row.
 GATE_MIN_PRECISION = 0.70
 GATE_MAX_UNITS_NO_GOOD = 3
+# The expected-neighbour probe's rule (docs/DECISIONS.md 2026-11-27), locked before
+# the picks were scored: headline = share of picks in a method's top PROBE_TOP_K.
+PROBE_TOP_K = 5
+PROBE_ALSO_K = 10
 
 
 def pick_units(units, seed):
@@ -194,6 +201,68 @@ def score(pairs, labels, programmes):
         "signals": blocks(pairs), "outside_programmes": outside, "in_programmes": inside,
         "by_stratum": {k: blocks(v) for k, v in strata.items()},
     }
+
+
+def _probe_block(per_unit):
+    """Average within each unit first, then across units, so a unit with 3 picks
+    weighs the same as one with 1."""
+    if not per_unit:
+        return {"units": 0, "top5": None, "top10": None, "median_rank": None}
+    m = lambda key: round(float(np.mean([u[key] for u in per_unit])), 3)
+    return {"units": len(per_unit), "top5": m("top5"), "top10": m("top10"),
+            "median_rank": float(np.median([u["median_rank"] for u in per_unit]))}
+
+
+def probe_score(picks, rankings, programmes):
+    """Rank of each owner-expected neighbour in each method's full list.
+
+    `picks` maps unit -> list of picked units (already mapped from dataset ids), or
+    None for "None come to mind". `rankings` maps method -> unit -> every other unit,
+    best first. `programmes` maps unit -> programme_key ("" when in none).
+
+    The unit itself and its same-programme siblings are removed from the list before
+    ranking; a sibling pick is reported apart (`structure_picks`, "shown in the
+    structure section"), and a pick of the unit itself (a series twin) under
+    `self_picks`. The headline scope is units outside programmes; programme units are
+    reported apart until their redraw (DECISIONS 2026-11-27)."""
+    missing = set(picks) - set(programmes)
+    if missing:
+        raise ValueError(f"units not in the programme assignments: {sorted(missing)[:5]}")
+    out = {"top_k": PROBE_TOP_K, "also_k": PROBE_ALSO_K, "scope": "outside_programmes",
+           "units_none": sorted(u for u, ps in picks.items() if ps is None), "methods": {}}
+    for method, ranking in rankings.items():
+        scopes = {"outside_programmes": [], "in_programmes": []}
+        structure, self_picks = [], []
+        for unit, ps in sorted(picks.items()):
+            if not ps:
+                continue
+            if unit not in ranking:
+                raise ValueError(f"{method}: no ranking for unit {unit!r}")
+            prog = programmes[unit]
+            sib = {u for u, k in programmes.items() if prog and k == prog and u != unit}
+            order = [u for u in ranking[unit] if u != unit and u not in sib]
+            pos = {u: i + 1 for i, u in enumerate(order)}
+            ranks = []
+            for p in ps:
+                if p == unit:
+                    self_picks.append((unit, p))
+                elif p in sib:
+                    structure.append((unit, p))
+                elif p not in pos:
+                    raise ValueError(f"{method}: pick {p!r} for {unit!r} is not in its ranking")
+                else:
+                    ranks.append(pos[p])
+            if not ranks:
+                continue
+            scopes["in_programmes" if prog else "outside_programmes"].append({
+                "top5": sum(r <= PROBE_TOP_K for r in ranks) / len(ranks),
+                "top10": sum(r <= PROBE_ALSO_K for r in ranks) / len(ranks),
+                "median_rank": float(np.median(ranks))})
+        out["methods"][method] = {
+            "outside_programmes": _probe_block(scopes["outside_programmes"]),
+            "in_programmes": dict(_probe_block(scopes["in_programmes"]), status="pending_redraw"),
+            "structure_picks": len(structure), "self_picks": len(self_picks)}
+    return out
 
 
 def main(argv=None):
