@@ -55,6 +55,7 @@ Maps the structure of Alberta's open data catalogues as a whole — Edmonton (da
 - **2026-11-20** — **Spot-check outcome under the 2026-11-20 rule: embeddings stay the text signal, and schema similarity's neighbour list is not shown.**
 - **2026-11-20** — **The search's MCP service never embeds inside a request: it serves the newest snapshot whose vectors are cached, marks a colder newer one under `cache_cold` (or skips the source with the warm … Rejected: only warming in cron (any other harvest, or a failed warm, would put the embed back inside a request); only replying "cache cold" (search would go blank for a source between a harvest and …
 - **2026-11-26** — **Each source's landscape (neighbours, map, clusters) is computed on that source alone; matches in other portals are a separate per-dataset list from embeddings only, never mixed into a dataset's own … Rejected: one joint map and neighbour list (three islands, and the province's 1,682 records dominate).
+- **2026-11-27** — **Expected-neighbour probe scoring rule (L0), locked before the picks are scored.** … Rejected: pooling picks across units (weights units by how many picks they got).
 
 ## Open work
 

@@ -174,3 +174,48 @@ def test_extend_keeps_pair_ids_and_appends_new_neighbours():
     assert new[0]["pair_id"] == f"p{len(pairs) + 1:03d}"
     with pytest.raises(ValueError):
         sc.extend(out, units, [nb("a", "embed", 1, "c")], "embed")
+
+
+# --- the expected-neighbour probe (DECISIONS 2026-11-27) ---------------------
+
+PROGS = {"u": "", "v": "", "p1": "P", "p2": "P", "p3": "P"}
+OTHERS = [f"o{i}" for i in range(12)]
+
+
+def _rank(unit, *front):
+    rest = [x for x in list(PROGS) + OTHERS if x != unit and x not in front]
+    return list(front) + rest
+
+
+def test_probe_siblings_leave_the_list_and_are_reported_apart():
+    # p2 sits ahead of o0 in the raw list; once siblings are removed o0 is rank 1.
+    picks = {"p1": ["p2", "o0"]}
+    r = sc.probe_score(picks, {"m": {"p1": _rank("p1", "p2", "p3", "o0")}}, PROGS)["methods"]["m"]
+    assert r["structure_picks"] == 1
+    assert r["in_programmes"]["median_rank"] == 1.0 and r["in_programmes"]["status"] == "pending_redraw"
+    assert r["outside_programmes"]["units"] == 0
+
+
+def test_probe_headline_is_top5_share_outside_programmes_averaged_within_unit_first():
+    # u: 3 picks, 1 in top 5 -> 1/3; v: 1 pick in top 5 -> 1. Mean of units = 2/3, not 2/4.
+    rank_u = _rank("u", "o0", *OTHERS[1:])           # o0 rank 1, o6 rank 7, o9 rank 10
+    rank_v = _rank("v", "o1")
+    picks = {"u": ["o0", "o6", "o9"], "v": ["o1"], "p1": ["o0"]}
+    r = sc.probe_score(picks, {"m": {"u": rank_u, "v": rank_v, "p1": _rank("p1", "o0")}},
+                       PROGS)["methods"]["m"]["outside_programmes"]
+    assert r["units"] == 2 and r["top5"] == round(2 / 3, 3)
+    assert r["top10"] == 1.0
+    assert r["median_rank"] == 4.0                    # median of unit medians 7 and 1
+
+
+def test_probe_self_pick_and_none_are_not_scored():
+    picks = {"u": ["u"], "v": None}
+    out = sc.probe_score(picks, {"m": {"u": _rank("u"), "v": _rank("v")}}, PROGS)
+    assert out["units_none"] == ["v"]
+    assert out["methods"]["m"]["self_picks"] == 1
+    assert out["methods"]["m"]["outside_programmes"]["units"] == 0
+
+
+def test_probe_pick_missing_from_a_ranking_is_an_error():
+    with pytest.raises(ValueError, match="not in its ranking"):
+        sc.probe_score({"u": ["zz"]}, {"m": {"u": _rank("u")}}, PROGS)
