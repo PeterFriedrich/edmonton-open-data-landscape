@@ -1,4 +1,5 @@
-"""Tests for the merged-branch reminder in scripts/handoff_gap.py.
+"""Tests for the merged-branch, hooks-path and Owner runs reminders in
+scripts/handoff_gap.py.
 
 Ported with the reminder from edmonton-tax-viz (its PR #727), whose
 tests/test_handoff_gap.py also covers the handoff-gap half; that half is not
@@ -150,3 +151,85 @@ def test_hooks_reminder_stays_out_of_session_end(repo, capsys):
     assert hg.main(["--session-end"]) == 0
     io = capsys.readouterr()
     assert io.out == "" and io.err == ""
+
+
+# --- the Owner runs reminder -------------------------------------------------
+
+# The format example as TODO.md quotes it: inside backticks, so not at line start.
+EXAMPLE = ("``- [ ] **Owner runs:** `<command or action>` — why · confirm: "
+           "`<check>` · urgency · since YYYY-MM-DD``\n")
+
+
+def _todo(repo, *lines):
+    (repo / "TODO.md").write_text("# TODO\n\n" + EXAMPLE + "\n## Open work\n\n"
+                                  + "".join(l + "\n" for l in lines))
+
+
+def test_owner_runs_reminder_lists_open_lines_at_session_start(repo, capsys):
+    _todo(repo, "- [ ] **Owner runs:** `sudo systemctl restart x` — why · "
+                "confirm: `systemctl is-active x` · low · since 2026-11-26")
+    hg.main(["--session-start"])
+    out = json.loads(capsys.readouterr().out)
+    for key in (out["systemMessage"], out["hookSpecificOutput"]["additionalContext"]):
+        assert "1 open `Owner runs:` line(s)" in key
+        assert "`sudo systemctl restart x` · confirm: `systemctl is-active x`" in key
+        assert "since 2026-11-26" not in key
+
+
+def test_owner_runs_reminder_silent_on_example_and_ticked_lines(repo, capsys):
+    _todo(repo, "- [x] **Owner runs:** `done thing` — confirm: `true`",
+          "- [ ] **A.** an ordinary item that mentions **Owner runs:** later")
+    assert hg.owner_runs_reminder() is None
+    assert hg.main(["--session-start"]) == 0
+    assert capsys.readouterr().out == ""
+
+
+def test_owner_runs_reminder_silent_without_todo(repo):
+    assert hg.owner_runs_reminder() is None
+
+
+def test_owner_runs_reminder_caps_the_list(repo):
+    _todo(repo, *[f"- [ ] **Owner runs:** `step {i}` — confirm: `true`"
+                  for i in range(hg.OWNER_RUNS_SHOWN + 2)])
+    text = hg.owner_runs_reminder()
+    assert f"{hg.OWNER_RUNS_SHOWN + 2} open" in text
+    assert f"step {hg.OWNER_RUNS_SHOWN - 1}" in text
+    assert f"step {hg.OWNER_RUNS_SHOWN}`" not in text
+    assert "…+2 more" in text
+
+
+def test_owner_runs_reminder_stays_out_of_session_end(repo, capsys):
+    _todo(repo, "- [ ] **Owner runs:** `x` — confirm: `true`")
+    assert hg.main(["--session-end"]) == 0
+    io = capsys.readouterr()
+    assert io.out == "" and io.err == ""
+
+
+def test_owner_runs_and_handoff_gap_are_both_reported(repo, capsys):
+    _todo(repo, "- [ ] **Owner runs:** `x` — confirm: `true`")
+    _commit(repo, "src/a.py")
+    hg.main(["--session-start"])
+    text = json.loads(capsys.readouterr().out)["systemMessage"]
+    assert "Owner runs:" in text and "that handoff records none of it" in text
+
+
+def test_owner_runs_reminder_matches_what_server_collates(repo):
+    # server's grep has no closing ** in it; a line bolded past the colon counts.
+    _todo(repo, "- [ ] **Owner runs: press Sync** — why · confirm: `synced` · low")
+    assert "press Sync" in hg.owner_runs_reminder()
+
+
+def test_owner_runs_reminder_shows_the_real_confirm_check_whole(repo):
+    _todo(repo, "- [ ] **Owner runs:** `x` — can't confirm: needs login · "
+                "confirm: `a · b` · low · since 2026-11-26",
+          "- [ ] **Owner runs:** " + "y" * 300 + " — why · confirm: `chk` · low")
+    text = hg.owner_runs_reminder()
+    assert "`x` · confirm: `a · b`\n" in text
+    assert "needs login" not in text
+    assert "… · confirm: `chk`" in text
+
+
+def test_owner_runs_reminder_without_the_em_dash_shows_the_line_once(repo):
+    _todo(repo, "- [ ] **Owner runs:** `cmd` -- why · confirm: `chk` · low")
+    text = hg.owner_runs_reminder()
+    assert text.count("confirm: `chk`") == 1

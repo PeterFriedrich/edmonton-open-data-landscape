@@ -8,6 +8,14 @@ group them; closed items are moved to `docs/TODO_archive.md` by the tool, which
 leaves a one-line stub under `## Done`. An open item can be stale — reproduce the
 symptom and re-measure the stated cause before acting on it.
 
+**By-hand actions** only the owner can do (a command a session's permissions
+block, a settings change) go under `### Waiting on the owner`, the first group in
+`## Open work`, one line each, so they can be collated across repos with
+`grep -n '^- \[ \] \*\*Owner runs:'` (anchored, so this example doesn't match):
+``- [ ] **Owner runs:** `<command or action>` — why · confirm: `<check>` · urgency · since YYYY-MM-DD``
+The SessionStart hook lists the open ones; run each `confirm:` check and tick
+the lines that pass.
+
 ## Open work
 
 ### Waiting on the owner
