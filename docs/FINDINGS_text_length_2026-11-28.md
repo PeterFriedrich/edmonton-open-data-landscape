@@ -98,8 +98,8 @@ a few hubs dominate. Nielsen & Hansen (2024) saw hubness reduction help every mo
   near-duplicate rule would remove more.
 
 ## Reproduce
-- Scripts: `build.py` and `evaluate.py`, in this session's scratchpad (`lenexp/`). They are
-  not committed; ask before relying on them being there.
+- Scripts: `tools/lenexp/build.py` and `tools/lenexp/evaluate.py`, run from the repo root
+  with an output folder as the one argument (outputs are not committed).
 - `build.py` builds the BM25 matrices and the stripped embeddings: about 90 s at batch 16,
   ~1 GB.
 - `evaluate.py` prints both tables.
